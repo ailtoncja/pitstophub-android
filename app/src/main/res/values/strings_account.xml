@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Follow / generic -->
+    <string name="action_follow">Follow</string>
+    <string name="action_unfollow">Unfollow</string>
+    <string name="action_open">Open</string>
+    <string name="cd_search">Search</string>
+    <string name="cd_alerts">Alerts</string>
+    <string name="toast_followed">Following %1$s</string>
+    <string name="toast_unfollowed">You unfollowed %1$s</string>
+    <string name="toast_login_needed">Sign in to follow categories, teams and drivers</string>
+
+    <!-- Sign in / sign up -->
+    <string name="auth_title_login">Sign in</string>
+    <string name="auth_title_register">Create account</string>
+    <string name="auth_tab_login">Sign in</string>
+    <string name="auth_tab_register">Sign up</string>
+    <string name="auth_name">Name</string>
+    <string name="auth_email">Email</string>
+    <string name="auth_password">Password</string>
+    <string name="auth_password_hint">At least %1$d characters</string>
+    <string name="auth_submit_login">Sign in</string>
+    <string name="auth_submit_register">Create account</string>
+    <string name="auth_busy">Working…</string>
+    <string name="auth_check_email">Account created. Check your email to confirm it before signing in.</string>
+    <string name="auth_unavailable">Sign-in isn’t available in this build: the Supabase settings are missing.</string>
+    <string name="auth_error_name">Enter your name (at least 2 letters).</string>
+    <string name="auth_error_email">That email doesn’t look right.</string>
+    <string name="auth_error_password">The password must have at least 10 characters.</string>
+    <string name="auth_error_credentials">Wrong email or password.</string>
+    <string name="auth_error_unconfirmed">Confirm your email first — check your inbox.</string>
+    <string name="auth_error_registered">This email is already registered. Try signing in instead.</string>
+    <string name="auth_error_weak">Choose a stronger password to protect your account.</string>
+    <string name="auth_error_rate">Too many attempts in a short time. Wait a few minutes and try again.</string>
+    <string name="auth_error_network">No connection. Check your internet and try again.</string>
+    <string name="auth_error_unknown">Something went wrong. Try again.</string>
+
+    <!-- Profile -->
+    <string name="profile_guest">You’re browsing as a guest</string>
+    <string name="profile_guest_hint">Sign in to follow favorites and get alerts.</string>
+    <string name="profile_login">Sign in</string>
+    <string name="profile_logout">Sign out</string>
+    <string name="profile_language">Language</string>
+    <string name="language_auto">Auto</string>
+    <string name="profile_favorites">Favorites</string>
+    <string name="profile_favorites_hint">%1$d followed · priority order</string>
+    <string name="profile_alerts">Alerts</string>
+    <string name="profile_alerts_hint">Race day, start and results</string>
+    <string name="profile_champions">F1 champions</string>
+    <string name="profile_champions_hint">Gallery of the world champions</string>
+    <string name="profile_categories">Explore categories</string>
+    <string name="profile_categories_hint">All series in one place</string>
+
+    <!-- Favorites / onboarding -->
+    <string name="favorites_title">Favorites</string>
+    <string name="favorites_priority">Priority order</string>
+    <string name="favorites_priority_hint">Sets the order of result alerts: whoever is on top shows first in the notification.</string>
+    <string name="favorites_none">You don’t follow any team or driver yet. Choose below.</string>
+    <string name="favorites_browse">Choose series, teams and drivers</string>
+    <string name="favorites_teams">Teams</string>
+    <string name="favorites_drivers">Drivers</string>
+    <string name="favorites_team">Team</string>
+    <string name="favorites_driver">Driver</string>
+    <string name="favorites_move_up">Move up</string>
+    <string name="favorites_move_down">Move down</string>
+    <string name="favorites_remove">Remove</string>
+    <string name="onboarding_title">Choose your favorites</string>
+    <string name="onboarding_body">Pick what you want to follow closely. You can change it any time.</string>
+    <string name="onboarding_skip">Skip</string>
+    <string name="onboarding_done">Done</string>
+
+    <!-- Alerts -->
+    <string name="alerts_title">Alerts</string>
+    <string name="alerts_need_login">Sign in to follow categories, teams and drivers and get alerts.</string>
+    <string name="alerts_device">Notifications on this phone</string>
+    <string name="alerts_device_on">On for the races you follow.</string>
+    <string name="alerts_device_blocked">Blocked in the system settings. Tap to allow.</string>
+    <string name="alerts_device_off">Turned off on this phone.</string>
+    <string name="alerts_race_day">Race day</string>
+    <string name="alerts_race_day_hint">A heads-up on the morning of the race.</string>
+    <string name="alerts_t60">1 hour before</string>
+    <string name="alerts_t60_hint">When the start is about to happen.</string>
+    <string name="alerts_start">Lights out</string>
+    <string name="alerts_start_hint">Right when the race starts.</string>
+    <string name="alerts_results">Results</string>
+    <string name="alerts_results_hint">How your drivers and teams finished.</string>
+    <string name="alerts_test">Send a test</string>
+    <string name="alerts_follow_something">You aren’t following anything yet. Follow a category, team or driver to get alerts.</string>
+    <string name="alerts_local_note">Alerts are scheduled on this phone and refreshed in the background, so they can arrive a few minutes late.</string>
+    <string name="alerts_next">Coming up for you</string>
+    <string name="alerts_next_empty">No upcoming races for what you follow.</string>
+
+    <!-- Search -->
+    <string name="search_title">Search</string>
+    <string name="search_placeholder">Driver, team, circuit or series</string>
+    <string name="search_hint">Type at least 2 letters.</string>
+    <string name="search_empty">Nothing found for “%1$s”.</string>
+    <string name="search_kind_category">Series</string>
+    <string name="search_kind_driver">Driver</string>
+    <string name="search_kind_team">Team</string>
+    <string name="search_kind_race">Round</string>
+
+    <!-- Aviso de marca -->
+    <string name="profile_disclaimer">Unofficial app. PitStopHub is not affiliated with Formula 1, the FIA or any team, series or driver. Names, logos and photos belong to their owners.</string>
+</resources>

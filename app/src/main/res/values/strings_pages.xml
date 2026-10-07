@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Navigation / drawer -->
+    <string name="nav_grid">Grid</string>
+    <string name="drawer_subtitle">%1$d series</string>
+    <string name="drawer_explore">Explore all categories</string>
+    <string name="summary_teams">%1$d Teams</string>
+    <string name="summary_rounds">%1$d Rounds</string>
+
+    <!-- Home -->
+    <string name="home_leaders">Championship Leaders</string>
+    <string name="home_full_standings">Standings</string>
+
+    <!-- Categories -->
+    <string name="categories_title">Categories</string>
+    <string name="categories_kicker">World of motorsport</string>
+    <string name="categories_count">%1$d series</string>
+    <string name="categories_explore">Explore series</string>
+    <string name="categories_lead">Formulas, endurance, rally and more — all in one place.</string>
+    <string name="categories_search">Search series</string>
+    <string name="categories_none">No series found.</string>
+    <string name="filter_all">All</string>
+    <string name="category_not_found">Category not found.</string>
+    <string name="hub_teams">Teams</string>
+    <string name="hub_drivers">Drivers</string>
+    <string name="hub_rounds">Rounds</string>
+    <string name="hub_completed">Completed</string>
+    <string name="hub_following">You follow this series</string>
+    <string name="hub_follow_hint">Follow it to get alerts</string>
+    <string name="hub_next">Next race</string>
+    <string name="hub_about">About the series</string>
+    <string name="hub_champions">F1 champions gallery</string>
+    <string name="hub_no_teams">Teams haven’t been announced yet.</string>
+    <string name="hub_no_drivers">Drivers haven’t been announced yet.</string>
+    <string name="hub_show_all_drivers">Show all %1$d drivers</string>
+
+    <!-- Grid -->
+    <string name="grid_title">Grid</string>
+    <string name="grid_drivers">Drivers · %1$d</string>
+    <string name="grid_teams">Teams · %1$d</string>
+    <string name="drivers_empty">No drivers to show for this category yet.</string>
+
+    <!-- Driver -->
+    <string name="driver_not_found">Driver not found.</string>
+    <string name="driver_position">Position</string>
+    <string name="driver_points">Points</string>
+    <string name="driver_wins">Wins</string>
+    <string name="driver_podiums">Podiums</string>
+    <string name="driver_poles">Poles</string>
+    <string name="driver_of_leader">%1$d%% of the leader</string>
+    <string name="driver_of_races">%1$d%% of races</string>
+    <string name="driver_duel">Teammate duel</string>
+    <string name="driver_vs">vs %1$s</string>
+    <string name="driver_duel_grid">Qualifying</string>
+    <string name="driver_duel_race">Race</string>
+    <string name="driver_last_rounds">Latest rounds</string>
+    <string name="driver_grid">Grid</string>
+    <string name="driver_finish">Finish</string>
+    <string name="driver_pole">Pole</string>
+    <string name="driver_telemetry">Season telemetry</string>
+    <string name="driver_fastest_laps">Fastest laps</string>
+    <string name="driver_avg_finish">Avg. finish</string>
+    <string name="driver_dnf">DNFs</string>
+    <string name="driver_bio">Biography and titles</string>
+    <string name="driver_title_count">Titles: %1$d</string>
+    <string name="driver_titles">Titles</string>
+    <string name="driver_career">Career</string>
+    <string name="driver_career_teams">Career teams</string>
+    <string name="driver_champion">World champion</string>
+    <string name="driver_team">Team</string>
+
+    <!-- Champions -->
+    <string name="champions_title">F1 Champions</string>
+    <string name="champions_kicker">Formula 1</string>
+    <string name="champions_heading">World champions</string>
+    <string name="champions_lead">The Formula 1 world champions. Tap a card to see the career.</string>
+    <string name="champions_count">%1$d drivers · %2$d world titles</string>
+    <string name="champions_by_titles">Titles</string>
+    <string name="champions_by_recent">Recent</string>
+    <string name="champions_by_wins">Wins</string>
+
+    <!-- Team -->
+    <string name="team_wins">Wins</string>
+    <string name="team_no_wins">No wins yet</string>
+    <string name="team_gap">Gap</string>
+    <string name="team_vs">vs %1$s</string>
+    <string name="team_evolution">Championship progress</string>
+    <string name="team_full_standings">Full standings · %1$s</string>
+
+    <!-- Race -->
+    <string name="race_add_calendar">Calendar</string>
+    <string name="race_share">Share</string>
+    <string name="race_no_calendar_app">No calendar app found.</string>
+    <string name="race_weather">Forecast</string>
+    <string name="race_pole">Pole position</string>
+    <string name="race_fastest_lap">Fastest lap</string>
+    <string name="weather_temp">High</string>
+    <string name="weather_rain_chance">Rain</string>
+    <string name="weather_wind">Wind</string>
+    <string name="weather_risk_high">High risk</string>
+    <string name="weather_risk_mid">Medium risk</string>
+    <string name="weather_risk_low">Low risk</string>
+    <string name="weather_clear">Clear</string>
+    <string name="weather_cloudy">Cloudy</string>
+    <string name="weather_fog">Fog</string>
+    <string name="weather_drizzle">Drizzle</string>
+    <string name="weather_rain">Rain</string>
+    <string name="weather_snow">Snow</string>
+    <string name="weather_storm">Storm</string>
+    <string name="circuit_layout">Official layout</string>
+    <string name="circuit_drs_count">DRS zones: %1$d</string>
+    <string name="circuit_length">Length</string>
+    <string name="circuit_corners">Corners</string>
+    <string name="circuit_clockwise">Clockwise</string>
+    <string name="circuit_counterclockwise">Counter-clockwise</string>
+    <string name="circuit_laps">Laps</string>
+    <string name="circuit_distance">Race distance</string>
+    <string name="circuit_record">Lap record</string>
+    <string name="circuit_no_record">No record — new track</string>
+    <string name="circuit_since">Since %1$d</string>
+    <string name="circuit_braking">Braking zones</string>
+    <string name="circuit_drs">DRS zones</string>
+    <string name="circuit_tyres">Tyre strategy</string>
+
+    <!-- Como funciona -->
+    <string name="rules_title">How it works</string>
+    <string name="rules_entry_title">How it works</string>
+    <string name="rules_entry_subtitle">%1$s · weekend format, scoring and rules</string>
+    <string name="rules_hero_hint">A quick guide to how this series works: weekend format, points and technical rules.</string>
+    <string name="rules_unavailable">There is no rules guide for this series yet.</string>
+    <string name="standings_how_points">How do the points work?</string>
+</resources>

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="channel_races_name">Race alerts</string>
+    <string name="channel_races_desc">Race day, one hour before the start and lights out for what you follow</string>
+    <string name="channel_results_name">Results</string>
+    <string name="channel_results_desc">How the drivers and teams you follow finished</string>
+</resources>

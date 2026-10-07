@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Navegação -->
+    <string name="nav_home">Início</string>
+    <string name="nav_calendar">Calendário</string>
+    <string name="nav_standings">Classificação</string>
+    <string name="cd_menu">Abrir categorias</string>
+    <string name="cd_profile">Perfil</string>
+    <string name="cd_back">Voltar</string>
+
+    <!-- Geral -->
+    <string name="loading">Carregando…</string>
+    <string name="action_close">Fechar</string>
+    <string name="offline_notice">Dados ao vivo indisponíveis. Mostrando as informações salvas.</string>
+    <string name="winner_label">Vencedor</string>
+    <string name="points_label">Pontos</string>
+
+    <!-- Status -->
+    <string name="status_live">Ao vivo</string>
+    <string name="status_awaiting">Aguardando resultado</string>
+    <string name="status_completed">Concluída</string>
+    <string name="status_upcoming">Próxima</string>
+    <string name="status_cancelled">Cancelada</string>
+
+    <!-- Contagem regressiva -->
+    <string name="unit_days">Dias</string>
+    <string name="unit_hours">Hrs</string>
+    <string name="unit_minutes">Min</string>
+    <string name="unit_seconds">Seg</string>
+
+    <!-- Início -->
+    <string name="next_race">Próxima corrida</string>
+    <string name="home_season_wrapped">Temporada encerrada</string>
+
+    <!-- Calendário -->
+    <string name="calendar_season_title">Temporada %1$s</string>
+    <string name="calendar_stats">%1$d corridas • %2$d disputadas • %3$d a disputar</string>
+    <string name="calendar_countdown">Contagem</string>
+    <string name="calendar_empty">Ainda não há corridas para mostrar nesta categoria.</string>
+    <string name="round_label">Rodada %1$02d</string>
+    <string name="action_view_results">Ver resultados</string>
+    <string name="action_view_details">Ver detalhes</string>
+    <string name="action_track_info">Sobre a pista</string>
+
+    <!-- Classificação -->
+    <string name="standings_title">Classificação do campeonato</string>
+    <string name="standings_season">Temporada %1$s</string>
+    <string name="standings_unavailable">A classificação ainda não está disponível para esta categoria.</string>
+    <string name="tab_drivers">Pilotos</string>
+    <string name="tab_constructors">Construtores</string>
+    <string name="tab_teams">Equipes</string>
+    <string name="leader_label">Líder do campeonato</string>
+    <string name="table_pos">Pos</string>
+    <string name="table_driver_team">Piloto / Equipe</string>
+    <string name="table_team">Equipe</string>
+    <string name="table_pts">Pts</string>
+    <string name="action_view_full">Ver classificação completa</string>
+    <string name="action_show_less">Mostrar menos</string>
+
+    <!-- Equipes -->
+    <string name="teams_title_constructors">Construtores</string>
+    <string name="teams_title_teams">Equipes</string>
+    <string name="teams_empty">Ainda não há equipes para mostrar nesta categoria.</string>
+    <string name="team_not_found">Equipe não encontrada.</string>
+    <string name="team_drivers">Pilotos</string>
+    <string name="team_about">Sobre</string>
+    <string name="team_position">Posição</string>
+
+    <!-- Detalhe da corrida -->
+    <string name="race_not_found">Corrida não encontrada.</string>
+    <string name="info_date">Data</string>
+    <string name="info_circuit">Circuito</string>
+    <string name="info_location">Local</string>
+    <string name="info_round">Rodada</string>
+    <string name="race_schedule">Programação do fim de semana</string>
+    <string name="race_results">Resultados</string>
+    <string name="race_results_failed">Não foi possível carregar os resultados.</string>
+    <string name="race_results_pending">Os resultados aparecem aqui depois da corrida.</string>
+    <string name="race_results_unavailable">Os resultados detalhados ainda não estão disponíveis para esta categoria.</string>
+    <string name="col_pos">Pos</string>
+    <string name="col_driver">Piloto</string>
+    <string name="col_time">Tempo / Status</string>
+    <string name="col_pts">Pts</string>
+    <string name="session_fp1">Treino livre 1</string>
+    <string name="session_fp2">Treino livre 2</string>
+    <string name="session_fp3">Treino livre 3</string>
+    <string name="session_sprint_qualifying">Classificação Sprint</string>
+    <string name="session_sprint">Sprint</string>
+    <string name="session_qualifying">Classificação</string>
+    <string name="session_race">Corrida</string>
+
+    <!-- Menu / perfil -->
+    <string name="drawer_title">Categorias</string>
+    <string name="group_formulas">Fórmulas</string>
+    <string name="group_endurance">Endurance / GT</string>
+    <string name="group_american">Americanas</string>
+    <string name="group_rally">Rally</string>
+    <string name="profile_title">Perfil</string>
+</resources>

@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Seguir / geral -->
+    <string name="action_follow">Seguir</string>
+    <string name="action_unfollow">Deixar de seguir</string>
+    <string name="action_open">Abrir</string>
+    <string name="cd_search">Buscar</string>
+    <string name="cd_alerts">Alertas</string>
+    <string name="toast_followed">Seguindo %1$s</string>
+    <string name="toast_unfollowed">Você deixou de seguir %1$s</string>
+    <string name="toast_login_needed">Entre na conta para seguir categorias, equipes e pilotos</string>
+
+    <!-- Login / cadastro -->
+    <string name="auth_title_login">Entrar</string>
+    <string name="auth_title_register">Criar conta</string>
+    <string name="auth_tab_login">Login</string>
+    <string name="auth_tab_register">Cadastro</string>
+    <string name="auth_name">Nome</string>
+    <string name="auth_email">E-mail</string>
+    <string name="auth_password">Senha</string>
+    <string name="auth_password_hint">Mínimo de %1$d caracteres</string>
+    <string name="auth_submit_login">Entrar</string>
+    <string name="auth_submit_register">Criar conta</string>
+    <string name="auth_busy">Processando…</string>
+    <string name="auth_check_email">Conta criada. Confirme seu e-mail antes de entrar.</string>
+    <string name="auth_unavailable">O login não está disponível nesta versão: faltam as configurações do Supabase.</string>
+    <string name="auth_error_name">Digite seu nome (pelo menos 2 letras).</string>
+    <string name="auth_error_email">Esse e-mail parece inválido.</string>
+    <string name="auth_error_password">A senha precisa ter pelo menos 10 caracteres.</string>
+    <string name="auth_error_credentials">E-mail ou senha incorretos.</string>
+    <string name="auth_error_unconfirmed">Confirme seu e-mail primeiro — olhe sua caixa de entrada.</string>
+    <string name="auth_error_registered">Este e-mail já está cadastrado. Tente entrar na conta.</string>
+    <string name="auth_error_weak">Escolha uma senha mais forte para proteger sua conta.</string>
+    <string name="auth_error_rate">Muitas tentativas em pouco tempo. Aguarde alguns minutos e tente de novo.</string>
+    <string name="auth_error_network">Sem conexão. Verifique a internet e tente novamente.</string>
+    <string name="auth_error_unknown">Algo deu errado. Tente novamente.</string>
+
+    <!-- Perfil -->
+    <string name="profile_guest">Você está como visitante</string>
+    <string name="profile_guest_hint">Entre para seguir favoritos e receber alertas.</string>
+    <string name="profile_login">Entrar</string>
+    <string name="profile_logout">Sair</string>
+    <string name="profile_language">Idioma</string>
+    <string name="language_auto">Auto</string>
+    <string name="profile_favorites">Favoritos</string>
+    <string name="profile_favorites_hint">%1$d seguidos · ordem de prioridade</string>
+    <string name="profile_alerts">Alertas</string>
+    <string name="profile_alerts_hint">Dia da corrida, largada e resultados</string>
+    <string name="profile_champions">Campeões da F1</string>
+    <string name="profile_champions_hint">Galeria dos campeões mundiais</string>
+    <string name="profile_categories">Explorar categorias</string>
+    <string name="profile_categories_hint">Todas as séries em um só lugar</string>
+
+    <!-- Favoritos / onboarding -->
+    <string name="favorites_title">Favoritos</string>
+    <string name="favorites_priority">Ordem de prioridade</string>
+    <string name="favorites_priority_hint">Define a ordem dos avisos de resultado: quem está no topo aparece primeiro na notificação.</string>
+    <string name="favorites_none">Você ainda não segue nenhuma equipe ou piloto. Escolha abaixo.</string>
+    <string name="favorites_browse">Escolha categorias, equipes e pilotos</string>
+    <string name="favorites_teams">Equipes</string>
+    <string name="favorites_drivers">Pilotos</string>
+    <string name="favorites_team">Equipe</string>
+    <string name="favorites_driver">Piloto</string>
+    <string name="favorites_move_up">Subir prioridade</string>
+    <string name="favorites_move_down">Descer prioridade</string>
+    <string name="favorites_remove">Remover</string>
+    <string name="onboarding_title">Escolha seus favoritos</string>
+    <string name="onboarding_body">Selecione o que você quer acompanhar de perto. Você pode mudar isso quando quiser.</string>
+    <string name="onboarding_skip">Pular</string>
+    <string name="onboarding_done">Concluir</string>
+
+    <!-- Alertas -->
+    <string name="alerts_title">Alertas</string>
+    <string name="alerts_need_login">Entre na conta para seguir categorias, equipes e pilotos e receber alertas.</string>
+    <string name="alerts_device">Notificações neste celular</string>
+    <string name="alerts_device_on">Ligadas para as corridas que você acompanha.</string>
+    <string name="alerts_device_blocked">Bloqueadas nas configurações do sistema. Toque para permitir.</string>
+    <string name="alerts_device_off">Desligadas neste celular.</string>
+    <string name="alerts_race_day">Dia da corrida</string>
+    <string name="alerts_race_day_hint">Um aviso na manhã da corrida.</string>
+    <string name="alerts_t60">1 hora antes</string>
+    <string name="alerts_t60_hint">Quando a largada está chegando.</string>
+    <string name="alerts_start">Largada</string>
+    <string name="alerts_start_hint">Na hora em que a corrida começa.</string>
+    <string name="alerts_results">Resultado</string>
+    <string name="alerts_results_hint">Como terminaram seus pilotos e equipes.</string>
+    <string name="alerts_test">Enviar teste</string>
+    <string name="alerts_follow_something">Você ainda não segue nada. Siga uma categoria, equipe ou piloto para receber alertas.</string>
+    <string name="alerts_local_note">Os alertas são agendados neste celular e atualizados em segundo plano, então podem chegar alguns minutos atrasados.</string>
+    <string name="alerts_next">Próximas para você</string>
+    <string name="alerts_next_empty">Nenhuma corrida pela frente do que você segue.</string>
+
+    <!-- Busca -->
+    <string name="search_title">Buscar</string>
+    <string name="search_placeholder">Piloto, equipe, circuito ou categoria</string>
+    <string name="search_hint">Digite pelo menos 2 letras.</string>
+    <string name="search_empty">Nada encontrado para “%1$s”.</string>
+    <string name="search_kind_category">Categoria</string>
+    <string name="search_kind_driver">Piloto</string>
+    <string name="search_kind_team">Equipe</string>
+    <string name="search_kind_race">Etapa</string>
+
+    <!-- Aviso de marca -->
+    <string name="profile_disclaimer">App não oficial. O PitStopHub não tem vínculo com a Fórmula 1, a FIA nem com equipes, categorias ou pilotos. Nomes, logos e fotos pertencem aos seus donos.</string>
+</resources>
