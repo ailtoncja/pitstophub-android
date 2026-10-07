@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- So na build de debug: deixa o app falar com um servidor de teste em HTTP (emulador -> 10.0.2.2). -->
+    <application android:networkSecurityConfig="@xml/network_security_config" />
+</manifest>

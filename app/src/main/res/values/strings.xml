@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <string name="app_name" translatable="false">PitStopHub</string>
+    <string name="brand_title" translatable="false">PITSTOPHUB</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_calendar">Calendar</string>
+    <string name="nav_standings">Standings</string>
+    <string name="cd_menu">Open categories</string>
+    <string name="cd_profile">Profile</string>
+    <string name="cd_back">Back</string>
+
+    <!-- Generic -->
+    <string name="loading">Loading…</string>
+    <string name="action_close">Close</string>
+    <string name="offline_notice">Live data is unavailable. Showing saved information.</string>
+    <string name="winner_label">Winner</string>
+    <string name="points_label">Points</string>
+
+    <!-- Status -->
+    <string name="status_live">Live now</string>
+    <string name="status_awaiting">Awaiting results</string>
+    <string name="status_completed">Completed</string>
+    <string name="status_upcoming">Upcoming</string>
+    <string name="status_cancelled">Cancelled</string>
+
+    <!-- Countdown -->
+    <string name="unit_days">Days</string>
+    <string name="unit_hours">Hrs</string>
+    <string name="unit_minutes">Mins</string>
+    <string name="unit_seconds">Secs</string>
+
+    <!-- Home -->
+    <string name="next_race">Next Race</string>
+    <string name="home_season_wrapped">Season Wrapped</string>
+
+    <!-- Calendar -->
+    <string name="calendar_season_title">%1$s Season</string>
+    <!-- Tres contagens numa linha so; um plural por contagem nao compensa (calendarios tem sempre varias provas). -->
+    <string name="calendar_stats" tools:ignore="PluralsCandidate">%1$d races • %2$d completed • %3$d to go</string>
+    <string name="calendar_countdown">Countdown</string>
+    <string name="calendar_empty">No races to show for this category yet.</string>
+    <string name="round_label">Rnd %1$02d</string>
+    <string name="action_view_results">View Results</string>
+    <string name="action_view_details">View Details</string>
+    <string name="action_track_info">Track Info</string>
+
+    <!-- Standings -->
+    <string name="standings_title">Championship Standings</string>
+    <string name="standings_season">Season %1$s</string>
+    <string name="standings_unavailable">Standings aren’t available for this category yet.</string>
+    <string name="tab_drivers">Drivers</string>
+    <string name="tab_constructors">Constructors</string>
+    <string name="tab_teams">Teams</string>
+    <string name="leader_label">Championship Leader</string>
+    <string name="table_pos">Pos</string>
+    <string name="table_driver_team">Driver / Team</string>
+    <string name="table_team">Team</string>
+    <string name="table_pts">Pts</string>
+    <string name="action_view_full">View Full Standings</string>
+    <string name="action_show_less">Show less</string>
+
+    <!-- Teams -->
+    <string name="teams_title_constructors">Constructors</string>
+    <string name="teams_title_teams">Teams</string>
+    <string name="teams_empty">No teams to show for this category yet.</string>
+    <string name="team_not_found">Team not found.</string>
+    <string name="team_drivers">Drivers</string>
+    <string name="team_about">About</string>
+    <string name="team_position">Position</string>
+
+    <!-- Race detail -->
+    <string name="race_not_found">Race not found.</string>
+    <string name="info_date">Date</string>
+    <string name="info_circuit">Circuit</string>
+    <string name="info_location">Location</string>
+    <string name="info_round">Round</string>
+    <string name="race_schedule">Weekend Schedule</string>
+    <string name="race_results">Results</string>
+    <string name="race_results_failed">Couldn’t load the results.</string>
+    <string name="race_results_pending">Results will appear here after the race.</string>
+    <string name="race_results_unavailable">Detailed results aren’t available for this category yet.</string>
+    <string name="col_pos">Pos</string>
+    <string name="col_driver">Driver</string>
+    <string name="col_time">Time / Status</string>
+    <string name="col_pts">Pts</string>
+    <string name="session_fp1">Practice 1</string>
+    <string name="session_fp2">Practice 2</string>
+    <string name="session_fp3">Practice 3</string>
+    <string name="session_sprint_qualifying">Sprint Qualifying</string>
+    <string name="session_sprint">Sprint</string>
+    <string name="session_qualifying">Qualifying</string>
+    <string name="session_race">Race</string>
+
+    <!-- Drawer / profile -->
+    <string name="drawer_title">Categories</string>
+    <string name="group_formulas">Formulas</string>
+    <string name="group_endurance">Endurance / GT</string>
+    <string name="group_american">American</string>
+    <string name="group_rally">Rally</string>
+    <string name="profile_title">Profile</string>
+</resources>

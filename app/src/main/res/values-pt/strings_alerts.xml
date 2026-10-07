@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="channel_races_name">Avisos de corrida</string>
+    <string name="channel_races_desc">Dia da corrida, 1 hora antes da largada e luzes apagadas do que você acompanha</string>
+    <string name="channel_results_name">Resultados</string>
+    <string name="channel_results_desc">Como terminaram os pilotos e equipes que você acompanha</string>
+</resources>
