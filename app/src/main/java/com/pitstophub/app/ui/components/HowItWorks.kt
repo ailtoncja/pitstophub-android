@@ -46,12 +46,12 @@ fun HowItWorksCard(categoryName: String, onClick: () -> Unit, modifier: Modifier
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            Box(Modifier.size(48.dp).clip(PitShapes.Card).background(PitColors.PrimaryContainer), contentAlignment = Alignment.Center) {
-                Icon(Icons.AutoMirrored.Filled.MenuBook, null, tint = Color.White, modifier = Modifier.size(26.dp))
+            Box(Modifier.size(48.dp).clip(androidx.compose.foundation.shape.CircleShape).background(androidx.compose.ui.graphics.Color.White), contentAlignment = Alignment.Center) {
+                Icon(Icons.AutoMirrored.Filled.MenuBook, null, tint = androidx.compose.ui.graphics.Color.Black, modifier = Modifier.size(26.dp))
             }
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(
-                    stringResource(R.string.rules_entry_title).uppercase(),
+                    stringResource(R.string.rules_entry_title),
                     style = PitText.HeadlineMd.copy(fontSize = 18.sp, lineHeight = 22.sp),
                     color = PitColors.OnSurface,
                 )

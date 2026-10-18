@@ -216,11 +216,11 @@ private fun TeamHero(team: Team) {
             Column {
                 Text(team.name, style = PitText.HeadlineMd, color = Color.White, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                    team.car?.let { Text(it.uppercase(), style = PitText.DataLabel, color = PitColors.OnSurfaceVariant) }
+                    team.car?.let { Text(it, style = PitText.DataLabel, color = PitColors.OnSurfaceVariant) }
                     team.raceClass?.let { StatusChip(it) }
                 }
                 team.principal?.takeIf { it.isNotBlank() }?.let {
-                    Text(it.uppercase(), style = PitText.DataLabelXs, color = PitColors.OnSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(it, style = PitText.DataLabelXs, color = PitColors.OnSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
             }
         }
@@ -239,10 +239,10 @@ private fun DriverCard(driver: Driver, category: Category, totalPoints: Double, 
                     if (driver.number.isNotBlank()) {
                         Text(driver.number, style = PitText.DataValue.copy(fontSize = 28.sp, lineHeight = 30.sp), color = Color.White)
                     }
-                    Text(driver.name.uppercase(), style = PitText.HeadlineMd.copy(fontSize = 18.sp, lineHeight = 22.sp), color = Color.White, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                    Text(driver.name, style = PitText.HeadlineMd.copy(fontSize = 18.sp, lineHeight = 22.sp), color = Color.White, maxLines = 2, overflow = TextOverflow.Ellipsis)
                     val nationality = driver.nationality
                     if (nationality.isNotBlank()) {
-                        Text("${Nationality.flag(nationality)} ${Nationality.label(nationality, isPortuguese())}".trim().uppercase(), style = PitText.DataLabelSm, color = PitColors.OnSurfaceVariant, maxLines = 1)
+                        Text("${Nationality.flag(nationality)} ${Nationality.label(nationality, isPortuguese())}".trim(), style = PitText.DataLabelSm, color = PitColors.OnSurfaceVariant, maxLines = 1)
                     }
                 }
                 if (standing != null) {

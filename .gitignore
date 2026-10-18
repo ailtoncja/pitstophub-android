@@ -19,3 +19,5 @@
 keystore.properties
 app/build/
 app/release/
+
+.impeccable/

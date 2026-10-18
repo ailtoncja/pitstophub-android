@@ -41,11 +41,18 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
     private val _state = MutableStateFlow(CategoryState())
     val state: StateFlow<CategoryState> = _state.asStateFlow()
 
+    /** Todas as categorias carregadas (estatico na hora, ao vivo quando chega): alimenta o reel e a Agenda. */
+    private val _all = MutableStateFlow<Map<String, CategoryData>>(emptyMap())
+    val all: StateFlow<Map<String, CategoryData>> = _all.asStateFlow()
+
     private val _deepLink = MutableStateFlow<DeepLink?>(null)
     val deepLink: StateFlow<DeepLink?> = _deepLink.asStateFlow()
 
     init {
-        viewModelScope.launch { _categories.value = repository.categories() }
+        viewModelScope.launch {
+            _categories.value = repository.categories()
+            loadAll(force = false)
+        }
         viewModelScope.launch { _selectedId.collectLatest { load(it, force = false) } }
         viewModelScope.launch { container.webData.warmUp() }
     }
@@ -58,6 +65,30 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
 
     fun refresh() {
         viewModelScope.launch { load(_selectedId.value, force = true) }
+    }
+
+    /** Atualiza todas as categorias (puxar para atualizar na Inicio e na Agenda). */
+    fun refreshAll() {
+        viewModelScope.launch { loadAll(force = true) }
+    }
+
+    private fun loadAll(force: Boolean) {
+        for (category in _categories.value) {
+            viewModelScope.launch {
+                if (!force) {
+                    val instant = repository.cached(category.id) ?: repository.staticData(category.id)
+                    if (instant != null) _all.update { it + (category.id to instant) }
+                }
+                try {
+                    val data = repository.load(category.id, force)
+                    _all.update { it + (category.id to data) }
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (_: Exception) {
+                    // fica com o que ja havia (estatico ou cache)
+                }
+            }
+        }
     }
 
     fun openFromNotification(categoryId: String, raceId: String?) {

@@ -64,10 +64,10 @@ fun BioCard(text: String, modifier: Modifier = Modifier) {
             "“",
             Modifier.align(Alignment.TopEnd).padding(end = 18.dp),
             style = PitText.DisplayLg.copy(fontSize = 120.sp, lineHeight = 120.sp),
-            color = PitColors.PrimaryContainer.copy(alpha = 0.11f),
+            color = androidx.compose.ui.graphics.Color.Transparent,
         )
         Row(Modifier.height(IntrinsicSize.Min)) {
-            Box(Modifier.width(4.dp).fillMaxHeight().background(PitColors.PrimaryContainer))
+            Box(Modifier.width(0.dp).fillMaxHeight())
             Column(Modifier.padding(start = 20.dp, end = 20.dp, top = 22.dp, bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
                 Text(
                     bio.lead,
@@ -75,7 +75,7 @@ fun BioCard(text: String, modifier: Modifier = Modifier) {
                     color = PitColors.OnSurface,
                 )
                 if (bio.paragraphs.isNotEmpty()) {
-                    Box(Modifier.width(40.dp).height(3.dp).background(PitColors.PrimaryContainer))
+                    Box(Modifier.height(0.dp))
                     bio.paragraphs.forEach { paragraph ->
                         Text(paragraph, style = PitText.BodyMd.copy(lineHeight = 26.sp), color = PitColors.Tertiary)
                     }

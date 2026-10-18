@@ -56,6 +56,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import com.pitstophub.app.R
+import com.pitstophub.app.ui.components.DataStateLabel
+import com.pitstophub.app.ui.components.HeroBackdrop
 import com.pitstophub.app.data.model.Category
 import com.pitstophub.app.data.model.StandingItem
 import com.pitstophub.app.data.repo.DriverLookup
@@ -119,22 +121,18 @@ fun StandingsScreen(
     PullToRefreshBox(isRefreshing = state.refreshing, onRefresh = onRefresh, modifier = modifier.fillMaxSize()) {
         LazyColumn(
             Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 24.dp, bottom = 32.dp),
-            verticalArrangement = Arrangement.spacedBy(24.dp),
+            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 20.dp, bottom = 32.dp),
+            verticalArrangement = Arrangement.spacedBy(18.dp),
         ) {
             if (data?.offline == true) item(key = "offline") { OfflineNotice() }
             item(key = "header") {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(
-                        stringResource(R.string.standings_title).uppercase(),
-                        style = PitText.HeadlineLgMobile,
+                        listOfNotNull(stringResource(R.string.nav_standings), data?.season).joinToString(" · "),
+                        style = PitText.HeadlineMd,
                         color = PitColors.OnSurface,
                     )
-                    Text(
-                        listOfNotNull(category?.name, data?.season?.let { stringResource(R.string.standings_season, it) }).joinToString(" • ").uppercase(),
-                        style = PitText.DataLabel.copy(letterSpacing = 0.1.em),
-                        color = PitColors.OnSurfaceVariant,
-                    )
+                    category?.let { DataStateLabel(it.id) }
                 }
             }
             category?.let { cat ->
@@ -188,24 +186,24 @@ private fun buildTabs(category: Category, driversLabel: String, constructorsLabe
 @Composable
 private fun SegmentedToggle(labels: List<String>, selected: Int, onSelect: (Int) -> Unit) {
     Row(
-        Modifier.clip(PitShapes.Card).background(PitColors.SurfaceHigh)
-            .border(1.dp, PitColors.OutlineVariant.copy(alpha = 0.3f), PitShapes.Card)
+        Modifier.clip(PitShapes.Pill).background(PitColors.Asphalt)
+            .border(1.dp, PitColors.Hairline, PitShapes.Pill)
             .horizontalScroll(rememberScrollState()).padding(4.dp),
         horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         labels.forEachIndexed { index, label ->
             val active = index == selected
             Box(
-                Modifier.clip(PitShapes.Card)
-                    .background(if (active) PitColors.PrimaryContainer else Color.Transparent)
+                Modifier.clip(PitShapes.Pill)
+                    .background(if (active) Color.White else Color.Transparent)
                     .clickable { onSelect(index) }
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                    .padding(horizontal = 16.dp, vertical = 10.dp),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
-                    label.uppercase(),
+                    label,
                     style = PitText.DataLabel,
-                    color = if (active) PitColors.OnPrimaryContainer else PitColors.OnSurfaceVariant,
+                    color = if (active) Color.Black else PitColors.Silver,
                     maxLines = 1,
                 )
             }
@@ -223,82 +221,41 @@ private fun LeaderCard(entry: StandingItem, isTeam: Boolean, category: Category,
     } else {
         driver?.let { d -> category.teams.firstOrNull { it.id == d.teamId } } ?: entry.team?.let { DriverLookup.team(category, it) }
     }
-    val shape = PitShapes.Soft
     val portrait = driver?.cutout ?: driver?.image
     val teamArt = team?.clearart ?: team?.badge
-    // GTWC e Endurance Brasil nao tem foto de piloto: o cartao encolhe em vez de deixar um vazio no topo.
     val hasVisual = portrait != null || teamArt != null
     Box(
-        Modifier.fillMaxWidth().heightIn(min = if (hasVisual) 400.dp else 0.dp)
-            .hardShadow(PitColors.PrimaryContainer, shape)
-            .clip(shape).background(PitColors.Asphalt).border(1.dp, PitColors.Hairline, shape)
-            .clickable(onClick = onClick),
+        Modifier.fillMaxWidth().height(if (hasVisual) 300.dp else 150.dp).clip(PitShapes.Media)
+            .border(1.dp, PitColors.Hairline, PitShapes.Media).clickable(onClick = onClick),
     ) {
-        // numero gigante ao fundo (sem imagem, fica no topo, onde nao e coberto pelo painel)
-        Text(
-            entry.position.toString(),
-            Modifier.align(if (hasVisual) Alignment.BottomEnd else Alignment.TopEnd).offset(x = 12.dp, y = if (hasVisual) 28.dp else (-4).dp),
-            style = PitText.DisplayLg.copy(fontSize = if (hasVisual) 200.sp else 150.sp, lineHeight = if (hasVisual) 200.sp else 150.sp),
-            color = PitColors.SurfaceHighest.copy(alpha = 0.25f),
-            maxLines = 1,
-        )
-        // foto: recorte do piloto; sem recorte, a foto; para equipes, o carro
+        HeroBackdrop(categoryId = category.id, categoryName = category.name, race = null, bare = true)
         when {
             portrait != null -> NetworkImage(
                 portrait,
-                Modifier.align(Alignment.TopEnd).fillMaxWidth(0.82f).height(290.dp),
+                Modifier.align(Alignment.TopEnd).fillMaxWidth(0.82f).height(210.dp),
                 contentScale = if (driver?.cutout != null) ContentScale.Fit else ContentScale.Crop,
                 alignment = if (driver?.cutout != null) Alignment.BottomCenter else Alignment.TopCenter,
             )
             teamArt != null -> NetworkImage(
                 teamArt,
-                Modifier.align(Alignment.TopCenter).fillMaxWidth().height(250.dp).padding(horizontal = 24.dp, vertical = 24.dp),
+                Modifier.align(Alignment.TopCenter).fillMaxWidth().height(190.dp).padding(24.dp),
                 contentScale = ContentScale.Fit,
             )
         }
-        Box(
-            Modifier.matchParentSize().background(
-                Brush.verticalGradient(0.35f to Color.Transparent, 0.75f to PitColors.Asphalt.copy(alpha = 0.6f), 1f to PitColors.Asphalt),
-            ),
-        )
-        // acento vermelho a esquerda
-        Box(Modifier.width(4.dp).fillMaxHeight().background(PitColors.PrimaryContainer).align(Alignment.CenterStart))
-
-        Column(Modifier.align(Alignment.BottomStart).fillMaxWidth()) {
-            if (!hasVisual) Spacer(Modifier.height(72.dp))
-            GlassPanel(Modifier.fillMaxWidth()) {
-                Column(Modifier.padding(24.dp)) {
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Column(Modifier.weight(1f)) {
-                            Text(
-                                stringResource(R.string.leader_label).uppercase(),
-                                style = PitText.DataLabel.copy(letterSpacing = 0.1.em),
-                                color = PitColors.Primary,
-                            )
-                            Spacer(Modifier.height(4.dp))
-                            Text(entry.name.uppercase(), style = PitText.HeadlineMd, color = PitColors.OnSurface, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                            val subtitle = if (isTeam) team?.car ?: team?.raceClass else entry.team ?: team?.name
-                            if (!subtitle.isNullOrBlank()) {
-                                Text(subtitle, style = PitText.BodyMd, color = PitColors.OnSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                            }
-                        }
-                        val flag = Nationality.flag(driver?.nationality)
-                        if (flag.isNotEmpty()) Text(flag, fontSize = 28.sp)
-                    }
-                    Spacer(Modifier.height(16.dp))
-                    HorizontalDivider(color = PitColors.OutlineVariant.copy(alpha = 0.3f))
-                    Spacer(Modifier.height(16.dp))
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Bottom) {
-                        Text(stringResource(R.string.points_label).uppercase(), style = PitText.DataLabel, color = PitColors.OnSurfaceVariant)
-                        Text(
-                            formatPoints(entry.points),
-                            style = PitText.DisplayLg.copy(fontFamily = MonoFamily, fontStyle = androidx.compose.ui.text.font.FontStyle.Normal, fontSize = 64.sp, lineHeight = 64.sp, fontWeight = FontWeight.Bold),
-                            color = PitColors.Primary,
-                            maxLines = 1,
-                        )
-                    }
-                }
+        Box(Modifier.matchParentSize().background(Brush.verticalGradient(0.35f to Color.Transparent, 0.72f to Color.Black.copy(alpha = 0.88f), 1f to Color.Black)))
+        Column(Modifier.align(Alignment.BottomStart).padding(20.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(entry.name, style = PitText.HeadlineLgMobile, color = Color.White, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
+                val flag = Nationality.flag(driver?.nationality)
+                if (flag.isNotEmpty()) Text(flag, fontSize = 22.sp)
             }
+            val subtitle = if (isTeam) team?.car ?: team?.raceClass else entry.team ?: team?.name
+            if (!subtitle.isNullOrBlank()) Text(subtitle, style = PitText.BodyMd, color = PitColors.Silver, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(
+                "${formatPoints(entry.points)} ${stringResource(R.string.table_pts).lowercase()}",
+                style = PitText.DataValue.copy(fontSize = 17.sp),
+                color = Color.White,
+            )
         }
     }
 }
@@ -322,12 +279,12 @@ private fun StandingsTable(
     ) {
         Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
             val header = PitText.DataLabel.copy(letterSpacing = 0.08.em)
-            Text(stringResource(R.string.table_pos).uppercase(), Modifier.width(48.dp), style = header, color = PitColors.OnSurfaceVariant, textAlign = TextAlign.Center)
+            Text(stringResource(R.string.table_pos), Modifier.width(48.dp), style = header, color = PitColors.OnSurfaceVariant, textAlign = TextAlign.Center)
             Text(
-                stringResource(if (tab.isTeam) R.string.table_team else R.string.table_driver_team).uppercase(),
+                stringResource(if (tab.isTeam) R.string.table_team else R.string.table_driver_team),
                 Modifier.weight(1f).padding(horizontal = 16.dp), style = header, color = PitColors.OnSurfaceVariant,
             )
-            Text(stringResource(R.string.table_pts).uppercase(), Modifier.width(72.dp).padding(end = 8.dp), style = header, color = PitColors.OnSurfaceVariant, textAlign = TextAlign.End)
+            Text(stringResource(R.string.table_pts), Modifier.width(72.dp).padding(end = 8.dp), style = header, color = PitColors.OnSurfaceVariant, textAlign = TextAlign.End)
         }
         HorizontalDivider(color = PitColors.Hairline)
         visible.forEachIndexed { index, line -> StandingRow(index, line, tab.isTeam, category, lastRaceName, onClick = { onOpen(line.item) }) }
@@ -338,7 +295,7 @@ private fun StandingsTable(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    stringResource(if (expanded) R.string.action_show_less else R.string.action_view_full).uppercase(),
+                    stringResource(if (expanded) R.string.action_show_less else R.string.action_view_full),
                     style = PitText.DataLabel.copy(letterSpacing = 0.1.em),
                     color = PitColors.OnSurface,
                 )
@@ -366,7 +323,7 @@ private fun StandingRow(index: Int, line: StandingLine, isTeam: Boolean, categor
         Modifier.fillMaxWidth().height(IntrinsicSize.Min).background(background).clickable(onClick = onClick),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(Modifier.width(4.dp).fillMaxHeight().background(if (leader) PitColors.PrimaryContainer else Color.Transparent))
+        Box(Modifier.width(0.dp).fillMaxHeight())
         Row(
             Modifier.weight(1f).background(if (leader) PitColors.Primary.copy(alpha = 0.05f) else Color.Transparent).padding(start = 0.dp, end = 16.dp, top = 12.dp, bottom = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -388,7 +345,7 @@ private fun StandingRow(index: Int, line: StandingLine, isTeam: Boolean, categor
                 Column(Modifier.weight(1f)) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         Text(
-                            (if (isTeam) item.name else abbreviate(item.name)).uppercase(),
+                            (if (isTeam) item.name else abbreviate(item.name)),
                             Modifier.weight(1f, fill = false),
                             style = PitText.HeadlineMd.copy(fontSize = 18.sp, lineHeight = 22.sp),
                             color = PitColors.OnSurface,
@@ -399,7 +356,7 @@ private fun StandingRow(index: Int, line: StandingLine, isTeam: Boolean, categor
                     }
                     val sub = if (isTeam) team?.car else item.team
                     if (!sub.isNullOrBlank()) {
-                        Text(sub.uppercase(), style = PitText.DataLabelSm, color = PitColors.OnSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        Text(sub, style = PitText.DataLabelSm, color = PitColors.OnSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
                 }
             }
@@ -435,7 +392,7 @@ private fun MovementArrow(delta: Int?) {
     when {
         delta == null || delta == 0 -> Unit
         delta > 0 -> Icon(Icons.Filled.ArrowDropUp, "+$delta", tint = PitColors.Success, modifier = Modifier.size(22.dp))
-        else -> Icon(Icons.Filled.ArrowDropDown, "$delta", tint = PitColors.PrimaryContainer, modifier = Modifier.size(22.dp))
+        else -> Icon(Icons.Filled.ArrowDropDown, "$delta", tint = PitColors.Error, modifier = Modifier.size(22.dp))
     }
 }
 
@@ -463,6 +420,6 @@ private fun HowPointsLink(onClick: () -> Unit) {
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Icon(Icons.Filled.Info, null, tint = PitColors.Primary, modifier = Modifier.size(18.dp))
-        Text(stringResource(R.string.standings_how_points).uppercase(), style = PitText.DataLabelSm, color = PitColors.OnSurface)
+        Text(stringResource(R.string.standings_how_points), style = PitText.DataLabelSm, color = PitColors.OnSurface)
     }
 }

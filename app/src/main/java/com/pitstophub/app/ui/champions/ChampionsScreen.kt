@@ -61,10 +61,10 @@ fun ChampionsScreen(champions: List<F1Champion>, onBack: () -> Unit, onOpen: (F1
         ) {
             item(span = { GridItemSpan(2) }) {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text(stringResource(R.string.champions_kicker).uppercase(), style = PitText.DataLabelSm, color = PitColors.Primary)
-                    Text(stringResource(R.string.champions_heading).uppercase(), style = PitText.HeadlineLgMobile, color = PitColors.OnSurface)
+                    Text(stringResource(R.string.champions_kicker), style = PitText.DataLabelSm, color = PitColors.Primary)
+                    Text(stringResource(R.string.champions_heading), style = PitText.HeadlineLgMobile, color = PitColors.OnSurface)
                     Text(stringResource(R.string.champions_lead), style = PitText.BodySm, color = PitColors.OnSurfaceVariant)
-                    Text(stringResource(R.string.champions_count, champions.size, totalTitles).uppercase(), style = PitText.DataLabelSm, color = PitColors.OnSurfaceVariant)
+                    Text(stringResource(R.string.champions_count, champions.size, totalTitles), style = PitText.DataLabelSm, color = PitColors.OnSurfaceVariant)
                     PitSegmented(
                         labels = listOf(stringResource(R.string.champions_by_titles), stringResource(R.string.champions_by_recent), stringResource(R.string.champions_by_wins)),
                         selected = order,
@@ -81,7 +81,7 @@ fun ChampionsScreen(champions: List<F1Champion>, onBack: () -> Unit, onOpen: (F1
                         buildString {
                             append(champion.name)
                             if (champion.championYears.isNotEmpty()) append(" • ${champion.championYears.size}x")
-                        }.uppercase(),
+                        },
                         Modifier.fillMaxWidth().padding(horizontal = 2.dp),
                         style = PitText.DataLabelXs,
                         color = PitColors.OnSurfaceVariant,

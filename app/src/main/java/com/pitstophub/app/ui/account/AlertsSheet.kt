@@ -150,7 +150,7 @@ fun AlertsSheet(onDismiss: () -> Unit, onLogin: () -> Unit, onOpenRace: (categor
                 Text(stringResource(R.string.alerts_local_note), style = PitText.DataLabelSm, color = PitColors.OnSurfaceVariant.copy(alpha = 0.8f))
 
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(stringResource(R.string.alerts_next).uppercase(), style = PitText.DataLabelSm, color = PitColors.OnSurfaceVariant)
+                    Text(stringResource(R.string.alerts_next), style = PitText.DataLabelSm, color = PitColors.OnSurfaceVariant)
                     val items = upcoming
                     when {
                         items == null -> Text(stringResource(R.string.loading), style = PitText.BodySm, color = PitColors.OnSurfaceVariant)

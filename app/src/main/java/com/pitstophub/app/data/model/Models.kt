@@ -61,9 +61,16 @@ data class Race(
     val lat: Double? = null,
     val lng: Double? = null,
 ) {
-    fun displayName(portuguese: Boolean): String = if (portuguese) name else enName ?: name
+    /** "Rodada 33" nao diz nada como titulo: em portugues, cai no nome em ingles quando ele existe. */
+    fun displayName(portuguese: Boolean): String = when {
+        !portuguese -> enName ?: name
+        GENERIC_ROUND.matches(name) && !enName.isNullOrBlank() -> enName
+        else -> name
+    }
     fun displayLocation(portuguese: Boolean): String = if (portuguese) location else enLocation ?: location
 }
+
+private val GENERIC_ROUND = Regex("""^Rodada \d+$""")
 
 @Serializable
 data class StandingItem(

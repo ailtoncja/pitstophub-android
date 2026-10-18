@@ -25,33 +25,28 @@ import com.pitstophub.app.ui.theme.PitColors
 import com.pitstophub.app.ui.theme.PitText
 import java.time.Instant
 
-/** Painel de vidro com dias : horas : minutos, com a barra vermelha a esquerda (hero da Home e detalhe). */
+/** Contagem em uma linha: "7 d  15 h  37 min", algarismos tabulares (mesmo formato do site). */
 @Composable
 fun CountdownPanel(target: Instant, now: Instant, modifier: Modifier = Modifier, showSeconds: Boolean = false) {
     val parts = RaceTime.countdown(target, now)
-    GlassPanel(modifier) {
-        Row(Modifier.height(IntrinsicSize.Min)) {
-            Box(Modifier.width(4.dp).fillMaxHeight().background(PitColors.Primary))
-            Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(if (showSeconds) 10.dp else 16.dp)) {
-                CountdownUnit("%02d".format(parts.days), stringResource(R.string.unit_days))
-                BlinkingColon()
-                CountdownUnit("%02d".format(parts.hours), stringResource(R.string.unit_hours))
-                BlinkingColon()
-                CountdownUnit("%02d".format(parts.minutes), stringResource(R.string.unit_minutes))
-                if (showSeconds) {
-                    BlinkingColon()
-                    CountdownUnit("%02d".format(parts.seconds), stringResource(R.string.unit_seconds))
-                }
-            }
-        }
-    }
+    Text(
+        buildString {
+            if (parts.days > 0) append("${parts.days} d  ")
+            append("%02d h  %02d min".format(parts.hours, parts.minutes))
+            if (showSeconds) append("  %02d s".format(parts.seconds))
+        },
+        modifier,
+        style = PitText.DataValue.copy(fontSize = 20.sp),
+        color = Color.White,
+    )
 }
 
+@Suppress("unused")
 @Composable
 private fun CountdownUnit(value: String, label: String) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(value, style = PitText.DataValue, color = Color.White)
         Spacer(Modifier.height(4.dp))
-        Text(label.uppercase(), style = PitText.DataLabelSm.copy(fontSize = 11.sp), color = PitColors.Tertiary)
+        Text(label, style = PitText.DataLabelSm.copy(fontSize = 11.sp), color = PitColors.Tertiary)
     }
 }

@@ -33,6 +33,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pitstophub.app.R
+import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.layout.height
+import com.pitstophub.app.ui.currentLocale
+import com.pitstophub.app.domain.RaceFormat
+import com.pitstophub.app.domain.RaceTime
+import com.pitstophub.app.ui.components.DataStateLabel
+import com.pitstophub.app.ui.components.HeroBackdrop
 import com.pitstophub.app.data.model.Category
 import com.pitstophub.app.data.repo.TextUtil
 import com.pitstophub.app.domain.CategoryGroups
@@ -59,6 +66,7 @@ fun CategoriesScreen(
     onBack: () -> Unit,
     onOpenCategory: (String) -> Unit,
     modifier: Modifier = Modifier,
+    showTopBar: Boolean = true,
 ) {
     val portuguese = isPortuguese()
     val account = LocalAccount.current
@@ -78,7 +86,7 @@ fun CategoriesScreen(
     }
 
     Column(modifier.fillMaxSize().background(PitColors.Carbon)) {
-        PitDetailTopBar(title = stringResource(R.string.categories_title), onBack = onBack)
+        if (showTopBar) PitDetailTopBar(title = stringResource(R.string.categories_title), onBack = onBack)
         LazyColumn(
             Modifier.fillMaxSize(),
             contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 20.dp, bottom = 32.dp),
@@ -86,11 +94,7 @@ fun CategoriesScreen(
         ) {
             item(key = "header") {
                 Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text(stringResource(R.string.categories_kicker).uppercase(), style = PitText.DataLabelSm, color = PitColors.OnSurfaceVariant)
-                        Text(stringResource(R.string.categories_count, categories.size), style = PitText.DataLabelSm, color = PitColors.OnSurfaceVariant)
-                    }
-                    Text(stringResource(R.string.categories_explore).uppercase(), style = PitText.HeadlineLgMobile, color = PitColors.OnSurface)
+                    Text(stringResource(R.string.categories_explore), style = PitText.HeadlineLgMobile, color = PitColors.OnSurface)
                     Text(stringResource(R.string.categories_lead), style = PitText.BodySm, color = PitColors.OnSurfaceVariant)
                     PitTextField(query, { query = it }, stringResource(R.string.categories_search))
                     Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -107,8 +111,7 @@ fun CategoriesScreen(
             sections.forEach { (group, items) ->
                 item(key = "title-${group.ids.first()}") {
                     Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text(stringResource(group.title).uppercase(), style = PitText.DataLabel, color = PitColors.OnSurface)
-                        Text(stringResource(R.string.categories_count, items.size), style = PitText.DataLabelSm, color = PitColors.OnSurfaceVariant)
+                        Text(stringResource(group.title), style = PitText.HeadlineMd, color = PitColors.OnSurface)
                     }
                 }
                 items.forEach { category ->
@@ -133,44 +136,34 @@ private fun CategoryCard(
     category: Category,
     portuguese: Boolean,
     following: Boolean,
-    liveToday: Boolean,
+    @Suppress("UNUSED_PARAMETER") liveToday: Boolean,
     onClick: () -> Unit,
     onToggleFollow: () -> Unit,
 ) {
-    val accent = CategoryVisuals.accent(category.id)
-    val summary = CategorySummary.of(category)
-    PitCard(Modifier.fillMaxWidth().clickable(onClick = onClick)) {
-        Row(Modifier.fillMaxWidth().padding(14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-            Box(
-                Modifier.size(52.dp).clip(PitShapes.Card).background(accent.copy(alpha = 0.16f)).border(1.dp, accent.copy(alpha = 0.45f), PitShapes.Card),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(CategoryVisuals.icon(category.id), null, tint = accent, modifier = Modifier.size(28.dp))
-            }
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(
-                        category.displayFullName(portuguese).uppercase(),
-                        style = PitText.HeadlineMd.copy(fontSize = 18.sp, lineHeight = 22.sp),
-                        color = PitColors.OnSurface,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f, fill = false),
-                    )
-                    if (liveToday) PulsingDot(PitColors.PrimaryContainer)
-                }
-                Text(category.displayDescription(portuguese), style = PitText.BodySm, color = PitColors.OnSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                Text(
-                    listOfNotNull(
-                        summary.teams.takeIf { it > 0 }?.let { stringResource(R.string.summary_teams, it) },
-                        summary.rounds.takeIf { it > 0 }?.let { stringResource(R.string.summary_rounds, it) },
-                    ).joinToString(" • ").uppercase(),
-                    style = PitText.DataLabelXs,
-                    color = accent,
-                    maxLines = 1,
-                )
-            }
-            FollowToggle(FollowKind.CATEGORY, following, onToggleFollow)
+    val now = remember { Instant.now() }
+    val next = RaceTime.nextRace(category.calendar, now)
+    val locale = currentLocale()
+    Box(
+        Modifier.fillMaxWidth().height(168.dp).clip(PitShapes.Card).border(1.dp, PitColors.Hairline, PitShapes.Card).clickable(onClick = onClick),
+    ) {
+        HeroBackdrop(categoryId = category.id, categoryName = category.name, race = null, compactCar = true)
+        Column(Modifier.align(Alignment.BottomStart).padding(start = 16.dp, end = 72.dp, bottom = 14.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(
+                if (portuguese) category.fullName else category.enFullName ?: category.fullName,
+                style = PitText.HeadlineMd,
+                color = Color.White,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                next?.let { "${RaceFormat.monthDay(it.date, locale)} · ${if (portuguese) it.name else it.enName ?: it.name}" } ?: stringResource(R.string.categories_no_next),
+                style = PitText.BodySm,
+                color = PitColors.Silver,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            DataStateLabel(category.id, Modifier.padding(top = 2.dp))
         }
+        FollowToggle(FollowKind.CATEGORY, following, onToggleFollow, Modifier.align(Alignment.TopEnd).padding(10.dp))
     }
 }

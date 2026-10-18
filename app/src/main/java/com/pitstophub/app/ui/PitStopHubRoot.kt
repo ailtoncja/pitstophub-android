@@ -7,12 +7,10 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.DrawerValue
-import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -40,6 +38,8 @@ import com.pitstophub.app.AppContainer
 import com.pitstophub.app.R
 import com.pitstophub.app.data.model.RaceStatus
 import com.pitstophub.app.domain.RaceTime
+import com.pitstophub.app.domain.Reel
+import com.pitstophub.app.data.model.Category
 import com.pitstophub.app.ui.account.AccountEvent
 import com.pitstophub.app.ui.account.AccountController
 import com.pitstophub.app.ui.account.AlertsSheet
@@ -48,12 +48,15 @@ import com.pitstophub.app.ui.account.FavoritesSheet
 import com.pitstophub.app.ui.account.LocalAccount
 import com.pitstophub.app.ui.account.ProfileSheet
 import com.pitstophub.app.ui.account.SearchSheet
+import com.pitstophub.app.ui.agenda.AgendaScreen
 import com.pitstophub.app.ui.calendar.CalendarScreen
 import com.pitstophub.app.ui.categories.CategoriesScreen
 import com.pitstophub.app.ui.categories.CategoryHubScreen
 import com.pitstophub.app.ui.categories.CategoryHubViewModel
 import com.pitstophub.app.ui.categories.HubTarget
 import com.pitstophub.app.ui.champions.ChampionsScreen
+import com.pitstophub.app.ui.components.CategoryHeader
+import com.pitstophub.app.ui.components.CategorySection
 import com.pitstophub.app.ui.components.PitBottomBar
 import com.pitstophub.app.ui.components.PitTopBar
 import com.pitstophub.app.ui.components.TopLevelTab
@@ -83,7 +86,6 @@ fun PitStopHubRoot(container: AppContainer, appViewModel: AppViewModel) {
     val navController = rememberNavController()
     val resources = LocalResources.current
     val scope = rememberCoroutineScope()
-    val drawerState = rememberDrawerState(DrawerValue.Closed)
     val snackbar = remember { SnackbarHostState() }
     var sheet by rememberSaveable { mutableStateOf<Sheet?>(null) }
 
@@ -98,27 +100,53 @@ fun PitStopHubRoot(container: AppContainer, appViewModel: AppViewModel) {
     val settingsReady by account.ready.collectAsStateWithLifecycle()
     val alertsEnabled by account.alertsEnabled.collectAsStateWithLifecycle()
     val deepLink by appViewModel.deepLink.collectAsStateWithLifecycle()
+    val allData by appViewModel.all.collectAsStateWithLifecycle()
 
     val destination = navController.currentBackStackEntryAsState().value?.destination
-    val currentTab: TopLevelTab? = when {
+    val isTopLevel = destination == null || destination.hasRoute<HomeRoute>() || destination.hasRoute<AgendaRoute>() || destination.hasRoute<CategoriesRoute>()
+    val currentTab: TopLevelTab = when {
         destination == null || destination.hasRoute<HomeRoute>() -> TopLevelTab.Home
-        destination.hasRoute<CalendarRoute>() -> TopLevelTab.Calendar
-        destination.hasRoute<StandingsRoute>() -> TopLevelTab.Standings
-        destination.hasRoute<GridRoute>() -> TopLevelTab.Grid
-        else -> null // telas de detalhe tem a propria barra
+        destination.hasRoute<AgendaRoute>() -> TopLevelTab.Agenda
+        else -> TopLevelTab.Categories // categorias e tudo o que se abre a partir delas
     }
 
     fun openTab(tab: TopLevelTab) {
         val route: Any = when (tab) {
             TopLevelTab.Home -> HomeRoute
-            TopLevelTab.Calendar -> CalendarRoute
-            TopLevelTab.Standings -> StandingsRoute
-            TopLevelTab.Grid -> GridRoute
+            TopLevelTab.Agenda -> AgendaRoute
+            TopLevelTab.Categories -> CategoriesRoute
+            TopLevelTab.Profile -> {
+                sheet = Sheet.PROFILE
+                return
+            }
         }
         navController.navigate(route) {
             popUpTo(navController.graph.findStartDestination().id) { saveState = true }
             launchSingleTop = true
             restoreState = true
+        }
+    }
+
+    /** Entrada de uma categoria: abre em "Como funciona" quando ha regras, como no site. */
+    fun openCategory(id: String) {
+        val hasRules = categories.firstOrNull { it.id == id }?.rulesFormat?.isNotEmpty() == true
+        navController.navigate(if (hasRules) RulesRoute(id) else CategoryRoute(id))
+    }
+
+    /** Troca de aba dentro da pagina da categoria: substitui a aba atual na pilha. */
+    fun openSection(id: String, section: CategorySection) {
+        val route: Any = when (section) {
+            CategorySection.RULES -> RulesRoute(id)
+            CategorySection.OVERVIEW -> CategoryRoute(id)
+            CategorySection.CALENDAR -> CalendarRoute
+            CategorySection.STANDINGS -> StandingsRoute
+            CategorySection.GRID -> GridRoute
+        }
+        if (section == CategorySection.CALENDAR || section == CategorySection.STANDINGS || section == CategorySection.GRID) appViewModel.select(id)
+        val current = navController.currentBackStackEntry?.destination?.id
+        navController.navigate(route) {
+            if (current != null) popUpTo(current) { inclusive = true }
+            launchSingleTop = true
         }
     }
 
@@ -141,7 +169,7 @@ fun PitStopHubRoot(container: AppContainer, appViewModel: AppViewModel) {
         val link = deepLink ?: return@LaunchedEffect
         appViewModel.select(link.categoryId)
         sheet = null
-        if (link.raceId != null) navController.navigate(RaceRoute(link.categoryId, link.raceId)) else openTab(TopLevelTab.Calendar)
+        if (link.raceId != null) navController.navigate(RaceRoute(link.categoryId, link.raceId)) else navController.navigate(CalendarRoute)
         appViewModel.consumeDeepLink()
     }
 
@@ -167,35 +195,13 @@ fun PitStopHubRoot(container: AppContainer, appViewModel: AppViewModel) {
         LocalTributes provides tributes,
     ) {
         Box(Modifier.fillMaxSize()) {
-            ModalNavigationDrawer(
-                drawerState = drawerState,
-                gesturesEnabled = currentTab != null,
-                drawerContent = {
-                    CategoryDrawer(
-                        categories = categories,
-                        selectedId = selectedId,
-                        onSelect = { id ->
-                            appViewModel.select(id)
-                            scope.launch { drawerState.close() }
-                        },
-                        onExplore = {
-                            scope.launch { drawerState.close() }
-                            navController.navigate(CategoriesRoute)
-                        },
-                        onOpenHub = { id ->
-                            scope.launch { drawerState.close() }
-                            navController.navigate(CategoryRoute(id))
-                        },
-                    )
-                },
-            ) {
                 Scaffold(
                     containerColor = PitColors.Carbon,
                     snackbarHost = { SnackbarHost(snackbar) },
                     topBar = {
-                        if (currentTab != null) {
+                        if (isTopLevel) {
                             PitTopBar(
-                                onMenu = { scope.launch { drawerState.open() } },
+                                onMenu = {},
                                 onSearch = { sheet = Sheet.SEARCH },
                                 onAlerts = { sheet = Sheet.ALERTS },
                                 onProfile = { sheet = Sheet.PROFILE },
@@ -206,7 +212,7 @@ fun PitStopHubRoot(container: AppContainer, appViewModel: AppViewModel) {
                         }
                     },
                     bottomBar = {
-                        if (currentTab != null) PitBottomBar(selected = currentTab, onSelect = ::openTab)
+                        PitBottomBar(selected = currentTab, onSelect = ::openTab, profileInitials = session?.name?.trim()?.take(2)?.uppercase())
                     },
                 ) { padding ->
                     NavHost(
@@ -219,26 +225,38 @@ fun PitStopHubRoot(container: AppContainer, appViewModel: AppViewModel) {
                         popExitTransition = { fadeOut(tween(120)) },
                     ) {
                         composable<HomeRoute> {
+                            val now = remember { java.time.Instant.now() }
+                            val items = remember(allData, settings.followedCategoryIds) {
+                                Reel.build(allData.values, settings.followedCategoryIds.toSet(), now)
+                            }
                             HomeScreen(
-                                state = categoryState,
-                                categories = categories,
-                                selectedId = selectedId,
-                                onSelectCategory = appViewModel::select,
-                                onOpenRace = { navController.navigate(RaceRoute(selectedId, it.id)) },
-                                onOpenDriver = { navController.navigate(DriverRoute(selectedId, it)) },
-                                onOpenTeam = { navController.navigate(TeamRoute(selectedId, it)) },
-                                onOpenCategory = { navController.navigate(CategoryRoute(it)) },
-                                onOpenStandings = { openTab(TopLevelTab.Standings) },
-                                onOpenRules = { navController.navigate(RulesRoute(selectedId)) },
-                                onRefresh = appViewModel::refresh,
+                                items = items,
+                                loading = allData.isEmpty(),
+                                followed = settings.followedCategoryIds.toSet(),
+                                refreshing = false,
+                                onRefresh = appViewModel::refreshAll,
+                                onOpenRace = { categoryId, raceId -> navController.navigate(RaceRoute(categoryId, raceId)) },
+                                onOpenCategory = ::openCategory,
+                                onToggleFollow = { id, name -> account.toggleCategory(id, name) },
+                            )
+                        }
+                        composable<AgendaRoute> {
+                            AgendaScreen(
+                                all = allData.values,
+                                followed = settings.followedCategoryIds.toSet(),
+                                refreshing = false,
+                                onRefresh = appViewModel::refreshAll,
+                                onOpenRace = { categoryId, raceId -> navController.navigate(RaceRoute(categoryId, raceId)) },
                             )
                         }
                         composable<CalendarRoute> {
+                            CategoryFrame(categoryState.data?.category, CategorySection.CALENDAR, settings.followsCategory(selectedId), { navController.popBackStack() }, { account.toggleCategory(selectedId, it) }, { openSection(selectedId, it) }) {
                             CalendarScreen(
                                 state = categoryState,
                                 onOpenRace = { navController.navigate(RaceRoute(selectedId, it.id)) },
                                 onRefresh = appViewModel::refresh,
                             )
+                            }
                         }
                         composable<StandingsRoute> {
                             val viewModel: StandingsViewModel = viewModel(factory = viewModelFactory { initializer { StandingsViewModel(container.categories) } })
@@ -246,6 +264,7 @@ fun PitStopHubRoot(container: AppContainer, appViewModel: AppViewModel) {
                             LaunchedEffect(categoryState.data?.category?.id, categoryState.data?.season, categoryState.data?.liveStandings) {
                                 categoryState.data?.let { viewModel.load(it) }
                             }
+                            CategoryFrame(categoryState.data?.category, CategorySection.STANDINGS, settings.followsCategory(selectedId), { navController.popBackStack() }, { account.toggleCategory(selectedId, it) }, { openSection(selectedId, it) }) {
                             StandingsScreen(
                                 state = categoryState,
                                 movement = movement,
@@ -254,14 +273,17 @@ fun PitStopHubRoot(container: AppContainer, appViewModel: AppViewModel) {
                                 onOpenRules = { navController.navigate(RulesRoute(selectedId, it)) },
                                 onRefresh = appViewModel::refresh,
                             )
+                            }
                         }
                         composable<GridRoute> {
+                            CategoryFrame(categoryState.data?.category, CategorySection.GRID, settings.followsCategory(selectedId), { navController.popBackStack() }, { account.toggleCategory(selectedId, it) }, { openSection(selectedId, it) }) {
                             GridScreen(
                                 state = categoryState,
                                 onOpenDriver = { navController.navigate(DriverRoute(selectedId, it.id)) },
                                 onOpenTeam = { navController.navigate(TeamRoute(selectedId, it.id)) },
                                 onRefresh = appViewModel::refresh,
                             )
+                            }
                         }
                         composable<RaceRoute> { entry ->
                             val route = entry.toRoute<RaceRoute>()
@@ -287,7 +309,7 @@ fun PitStopHubRoot(container: AppContainer, appViewModel: AppViewModel) {
                                 onOpenDriver = { navController.navigate(DriverRoute(route.categoryId, it)) },
                                 onOpenStandings = {
                                     appViewModel.select(route.categoryId)
-                                    openTab(TopLevelTab.Standings)
+                                    navController.navigate(StandingsRoute)
                                 },
                             )
                         }
@@ -309,7 +331,8 @@ fun PitStopHubRoot(container: AppContainer, appViewModel: AppViewModel) {
                             CategoriesScreen(
                                 categories = categories,
                                 onBack = { navController.popBackStack() },
-                                onOpenCategory = { navController.navigate(CategoryRoute(it)) },
+                                onOpenCategory = ::openCategory,
+                                showTopBar = false,
                             )
                         }
                         composable<CategoryRoute> { entry ->
@@ -318,19 +341,21 @@ fun PitStopHubRoot(container: AppContainer, appViewModel: AppViewModel) {
                                 factory = viewModelFactory { initializer { CategoryHubViewModel(container.categories, route.categoryId) } },
                             )
                             val state by viewModel.state.collectAsStateWithLifecycle()
+                            CategoryFrame(state.data?.category, CategorySection.OVERVIEW, settings.followsCategory(route.categoryId), { navController.popBackStack() }, { account.toggleCategory(route.categoryId, it) }, { openSection(route.categoryId, it) }) {
                             CategoryHubScreen(
                                 state = state,
+                                showTopBar = false,
                                 onBack = { navController.popBackStack() },
                                 onUseCategory = { target ->
-                                    appViewModel.select(route.categoryId)
-                                    openTab(if (target == HubTarget.CALENDAR) TopLevelTab.Calendar else TopLevelTab.Standings)
+                                    openSection(route.categoryId, if (target == HubTarget.CALENDAR) CategorySection.CALENDAR else CategorySection.STANDINGS)
                                 },
                                 onOpenRace = { navController.navigate(RaceRoute(route.categoryId, it.id)) },
                                 onOpenTeam = { navController.navigate(TeamRoute(route.categoryId, it)) },
                                 onOpenDriver = { navController.navigate(DriverRoute(route.categoryId, it)) },
                                 onOpenChampions = { navController.navigate(ChampionsRoute) },
-                                onOpenRules = { navController.navigate(RulesRoute(route.categoryId)) },
+                                onOpenRules = { openSection(route.categoryId, CategorySection.RULES) },
                             )
+                            }
                         }
                         composable<RulesRoute> { entry ->
                             val route = entry.toRoute<RulesRoute>()
@@ -338,7 +363,9 @@ fun PitStopHubRoot(container: AppContainer, appViewModel: AppViewModel) {
                                 factory = viewModelFactory { initializer { CategoryHubViewModel(container.categories, route.categoryId) } },
                             )
                             val state by viewModel.state.collectAsStateWithLifecycle()
-                            RulesScreen(state = state, initialSection = route.section, onBack = { navController.popBackStack() })
+                            CategoryFrame(state.data?.category, CategorySection.RULES, settings.followsCategory(route.categoryId), { navController.popBackStack() }, { account.toggleCategory(route.categoryId, it) }, { openSection(route.categoryId, it) }) {
+                                RulesScreen(state = state, initialSection = route.section, onBack = { navController.popBackStack() }, showTopBar = false)
+                            }
                         }
                         composable<ChampionsRoute> {
                             ChampionsScreen(
@@ -349,7 +376,6 @@ fun PitStopHubRoot(container: AppContainer, appViewModel: AppViewModel) {
                         }
                     }
                 }
-            }
 
             // folhas
             when (sheet) {
@@ -365,7 +391,7 @@ fun PitStopHubRoot(container: AppContainer, appViewModel: AppViewModel) {
                     },
                     onOpenCategories = {
                         sheet = null
-                        navController.navigate(CategoriesRoute)
+                        openTab(TopLevelTab.Categories)
                     },
                 )
                 Sheet.ALERTS -> AlertsSheet(
@@ -379,7 +405,7 @@ fun PitStopHubRoot(container: AppContainer, appViewModel: AppViewModel) {
                 Sheet.FAVORITES -> FavoritesSheet(onDismiss = { sheet = null })
                 Sheet.SEARCH -> SearchSheet(
                     onDismiss = { sheet = null },
-                    onOpenCategory = { navController.navigate(CategoryRoute(it)) },
+                    onOpenCategory = ::openCategory,
                     onOpenDriver = { categoryId, id -> navController.navigate(DriverRoute(categoryId, id)) },
                     onOpenTeam = { categoryId, id -> navController.navigate(TeamRoute(categoryId, id)) },
                     onOpenRace = { categoryId, id -> navController.navigate(RaceRoute(categoryId, id)) },
@@ -391,5 +417,35 @@ fun PitStopHubRoot(container: AppContainer, appViewModel: AppViewModel) {
 
             TributeOverlay(tributes)
         }
+    }
+}
+
+
+/** Cabecalho da categoria (abas, seguir) por cima de qualquer pagina de categoria. */
+@Composable
+private fun CategoryFrame(
+    category: Category?,
+    section: CategorySection,
+    following: Boolean,
+    onBack: () -> Unit,
+    onToggleFollow: (String) -> Unit,
+    onSection: (CategorySection) -> Unit,
+    content: @Composable () -> Unit,
+) {
+    Column(Modifier.fillMaxSize()) {
+        if (category != null) {
+            val portuguese = isPortuguese()
+            CategoryHeader(
+                categoryId = category.id,
+                title = if (portuguese) category.fullName else category.enFullName ?: category.fullName,
+                current = section,
+                following = following,
+                hasRules = category.rulesFormat.isNotEmpty(),
+                onBack = onBack,
+                onToggleFollow = { onToggleFollow(category.name) },
+                onSection = onSection,
+            )
+        }
+        Box(Modifier.weight(1f)) { content() }
     }
 }

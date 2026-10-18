@@ -72,12 +72,12 @@ internal fun shortRuleTitle(title: String, max: Int = 22): String {
  * por cartao, com atalhos no topo para pular para cada uma.
  */
 @Composable
-fun RulesScreen(state: CategoryHubState, initialSection: Int, onBack: () -> Unit, modifier: Modifier = Modifier) {
+fun RulesScreen(state: CategoryHubState, initialSection: Int, onBack: () -> Unit, modifier: Modifier = Modifier, showTopBar: Boolean = true) {
     val portuguese = isPortuguese()
     val category = state.data?.category
 
     Column(modifier.fillMaxSize().background(PitColors.Carbon)) {
-        PitDetailTopBar(title = stringResource(R.string.rules_title), onBack = onBack)
+        if (showTopBar) PitDetailTopBar(title = stringResource(R.string.rules_title), onBack = onBack)
         if (category == null || category.rulesFormat.isEmpty()) {
             Box(Modifier.fillMaxSize().padding(24.dp)) {
                 Text(
@@ -102,25 +102,7 @@ fun RulesScreen(state: CategoryHubState, initialSection: Int, onBack: () -> Unit
             contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 32.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            item(key = "hero") {
-                Box(
-                    Modifier.fillMaxWidth().clip(PitShapes.Soft)
-                        .background(PitColors.Asphalt)
-                        .border(1.dp, PitColors.Hairline, PitShapes.Soft)
-                        .carbonTexture(0.04f),
-                ) {
-                    Row(Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                        Box(
-                            Modifier.size(56.dp).clip(PitShapes.Card).background(PitColors.SurfaceHigh).border(1.dp, PitColors.Hairline, PitShapes.Card),
-                            contentAlignment = Alignment.Center,
-                        ) { Icon(CategoryVisuals.icon(category.id), null, tint = Color.White, modifier = Modifier.size(30.dp)) }
-                        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                            Text(category.name.uppercase(), style = PitText.HeadlineLgMobile, color = Color.White)
-                            Text(stringResource(R.string.rules_hero_hint), style = PitText.BodySm, color = PitColors.OnSurfaceVariant)
-                        }
-                    }
-                }
-            }
+            item(key = "hero") { Box(Modifier.height(0.dp)) }
             item(key = "nav") {
                 Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     rules.forEachIndexed { index, rule ->
@@ -140,34 +122,25 @@ fun RulesScreen(state: CategoryHubState, initialSection: Int, onBack: () -> Unit
 }
 
 @Composable
-private fun RuleCard(number: Int, rule: RuleSection, portuguese: Boolean) {
+private fun RuleCard(@Suppress("UNUSED_PARAMETER") number: Int, rule: RuleSection, portuguese: Boolean) {
     val title = rule.displayTitle(portuguese)
     val text = remember(rule, portuguese) { splitBio(rule.displayBody(portuguese)) }
-    PitCard(Modifier.fillMaxWidth()) {
-        Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-                Box(
-                    Modifier.size(44.dp).clip(PitShapes.Card).background(PitColors.SurfaceHigh).border(1.dp, PitColors.Hairline, PitShapes.Card),
-                    contentAlignment = Alignment.Center,
-                ) { Icon(ruleIcon(title), null, tint = PitColors.Primary, modifier = Modifier.size(24.dp)) }
-                Column(Modifier.weight(1f)) {
-                    Text("%02d".format(number), style = PitText.DataLabelXs, color = PitColors.Primary)
-                    Text(title.uppercase(), style = PitText.HeadlineMd.copy(fontSize = 18.sp, lineHeight = 22.sp), color = Color.White)
-                }
-            }
-            Box(Modifier.width(40.dp).height(3.dp).background(PitColors.PrimaryContainer))
-            if (text.lead.isNotEmpty()) {
-                // so a frase curta vira destaque; um bloco longo em negrito cansa a leitura
-                val short = text.lead.length <= LEAD_MAX
-                Text(
-                    text.lead,
-                    style = PitText.BodyMd.copy(fontWeight = if (short) FontWeight.SemiBold else FontWeight.Normal, lineHeight = 25.sp),
-                    color = if (short) PitColors.OnSurface else PitColors.Tertiary,
-                )
-            }
-            text.paragraphs.forEach { paragraph ->
-                Text(paragraph, style = PitText.BodyMd.copy(lineHeight = 25.sp), color = PitColors.Tertiary)
-            }
+    Column(Modifier.fillMaxWidth().padding(top = 8.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            Icon(ruleIcon(title), null, tint = Color.White, modifier = Modifier.size(22.dp))
+            Text(title, style = PitText.HeadlineMd, color = Color.White)
+        }
+        if (text.lead.isNotEmpty()) {
+            // so a frase curta vira destaque; um bloco longo em negrito cansa a leitura
+            val short = text.lead.length <= LEAD_MAX
+            Text(
+                text.lead,
+                style = PitText.BodyLg.copy(fontWeight = if (short) FontWeight.SemiBold else FontWeight.Normal),
+                color = if (short) Color.White else PitColors.Silver,
+            )
+        }
+        text.paragraphs.forEach { paragraph ->
+            Text(paragraph, style = PitText.BodyLg, color = PitColors.Silver)
         }
     }
 }

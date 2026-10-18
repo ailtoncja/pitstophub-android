@@ -40,6 +40,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.em
 import com.pitstophub.app.R
 import com.pitstophub.app.data.model.Category
@@ -72,14 +73,14 @@ internal fun TeamCard(team: Team, drivers: List<Driver>, onClick: () -> Unit) {
     PitCard(Modifier.fillMaxWidth().clickable(onClick = onClick)) {
         Box {
             Column {
-                Column(Modifier.padding(24.dp)) {
+                Column(Modifier.padding(20.dp)) {
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Top) {
                         Column(Modifier.weight(1f).padding(end = 12.dp)) {
                             Text(team.name, style = PitText.HeadlineMd, color = Color.White, maxLines = 2, overflow = TextOverflow.Ellipsis)
                             val subtitle = listOfNotNull(team.car, team.raceClass).joinToString(" • ")
                             if (subtitle.isNotEmpty()) {
                                 Spacer(Modifier.height(4.dp))
-                                Text(subtitle.uppercase(), style = PitText.DataLabel, color = PitColors.TertiaryContainer, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                Text(subtitle, style = PitText.BodySm, color = PitColors.Silver, maxLines = 1, overflow = TextOverflow.Ellipsis)
                             }
                         }
                         // brasao da AF Corse (WEC): 5 toques abrem uma homenagem escondida (o toque nao abre a equipe)
@@ -92,8 +93,8 @@ internal fun TeamCard(team: Team, drivers: List<Driver>, onClick: () -> Unit) {
                         ) { TeamBadge(team) }
                     }
                     if (sorted.isNotEmpty()) {
-                        Spacer(Modifier.height(28.dp))
-                        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Spacer(Modifier.height(14.dp))
+                        Column {
                             sorted.take(MAX_DRIVERS_ON_CARD).forEach { DriverLine(it) }
                             if (sorted.size > MAX_DRIVERS_ON_CARD) {
                                 Text("+${sorted.size - MAX_DRIVERS_ON_CARD}", style = PitText.DataLabel, color = PitColors.OnSurfaceVariant)
@@ -123,24 +124,23 @@ internal fun TeamBadge(team: Team, size: Dp = 48.dp) {
 @Composable
 private fun DriverLine(driver: Driver) {
     Row(
-        Modifier.fillMaxWidth().background(PitColors.SurfaceLow).padding(vertical = 12.dp).padding(end = 12.dp),
+        Modifier.fillMaxWidth().padding(vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(Modifier.width(2.dp).height(24.dp).background(PitColors.OutlineVariant))
         // categorias sem numero de carro (Endurance Brasil) nao reservam a coluna do numero
         if (driver.number.isNotBlank()) {
             Text(
                 driver.number,
-                Modifier.width(52.dp).padding(start = 14.dp),
-                style = PitText.DataValue,
-                color = Color.White,
+                Modifier.width(44.dp),
+                style = PitText.DataValue.copy(fontSize = 16.sp),
+                color = PitColors.Silver,
                 maxLines = 1,
             )
         }
         Text(
-            driver.name.uppercase(),
-            Modifier.weight(1f).padding(start = if (driver.number.isNotBlank()) 0.dp else 14.dp),
-            style = PitText.BodyMd.copy(letterSpacing = 0.025.em),
+            driver.name,
+            Modifier.weight(1f),
+            style = PitText.BodyMd,
             color = PitColors.OnSurface,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,

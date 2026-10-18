@@ -74,7 +74,7 @@ fun CategoryDrawer(categories: List<Category>, selectedId: String, onSelect: (St
             ) {
                 Image(painterResource(R.drawable.ic_launcher_logo), null, Modifier.size(40.dp))
                 Column(Modifier.weight(1f)) {
-                    Text(stringResource(R.string.drawer_title).uppercase(), style = PitText.HeadlineMd, color = PitColors.Primary)
+                    Text(stringResource(R.string.drawer_title), style = PitText.HeadlineMd, color = PitColors.Primary)
                     Text(stringResource(R.string.drawer_subtitle, categories.size), style = PitText.DataLabelSm, color = PitColors.OnSurfaceVariant)
                 }
             }
@@ -83,7 +83,7 @@ fun CategoryDrawer(categories: List<Category>, selectedId: String, onSelect: (St
                     .border(1.dp, PitColors.Hairline, PitShapes.Card).clickable(onClick = onExplore).padding(horizontal = 14.dp, vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(stringResource(R.string.drawer_explore).uppercase(), Modifier.weight(1f), style = PitText.ButtonLabel, color = PitColors.OnSurface)
+                Text(stringResource(R.string.drawer_explore), Modifier.weight(1f), style = PitText.ButtonLabel, color = PitColors.OnSurface)
                 Icon(Icons.AutoMirrored.Filled.ArrowForward, null, tint = PitColors.Primary, modifier = Modifier.size(18.dp))
             }
             Spacer(Modifier.height(8.dp))
@@ -93,7 +93,7 @@ fun CategoryDrawer(categories: List<Category>, selectedId: String, onSelect: (St
                 val items = group.ids.mapNotNull(byId::get)
                 if (items.isEmpty()) return@forEach
                 Row(Modifier.padding(start = 20.dp, end = 20.dp, top = 22.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text(stringResource(group.title).uppercase(), style = PitText.DataLabelSm, color = PitColors.OnSurfaceVariant)
+                    Text(stringResource(group.title), style = PitText.DataLabelSm, color = PitColors.OnSurfaceVariant)
                     Spacer(Modifier.width(10.dp))
                     HorizontalDivider(Modifier.weight(1f), color = PitColors.HairlineSoft)
                     Text(items.size.toString(), Modifier.padding(start = 10.dp), style = PitText.DataLabelSm, color = PitColors.OnSurfaceVariant)
@@ -157,7 +157,7 @@ private fun CategoryRow(
                 listOfNotNull(
                     summary.teams.takeIf { it > 0 }?.let { stringResource(R.string.summary_teams, it) },
                     summary.rounds.takeIf { it > 0 }?.let { stringResource(R.string.summary_rounds, it) },
-                ).joinToString(" • ").ifEmpty { category.name }.uppercase(),
+                ).joinToString(" • ").ifEmpty { category.name },
                 style = PitText.DataLabelXs,
                 color = PitColors.OnSurfaceVariant,
                 maxLines = 1,

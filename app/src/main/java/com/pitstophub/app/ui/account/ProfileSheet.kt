@@ -65,14 +65,14 @@ fun ProfileSheet(
                 horizontalArrangement = Arrangement.spacedBy(14.dp),
             ) {
                 Box(
-                    Modifier.size(52.dp).clip(PitShapes.Card).background(PitColors.PrimaryContainer),
+                    Modifier.size(52.dp).clip(androidx.compose.foundation.shape.CircleShape).background(androidx.compose.ui.graphics.Color.White),
                     contentAlignment = Alignment.Center,
                 ) {
                     val name = session?.name
                     if (name != null) {
-                        Text(name.trim().take(2).uppercase(), style = PitText.HeadlineMd, color = PitColors.OnPrimaryContainer)
+                        Text(name.trim().take(2).uppercase(), style = PitText.HeadlineMd, color = androidx.compose.ui.graphics.Color.Black)
                     } else {
-                        Icon(Icons.Filled.Person, null, tint = PitColors.OnPrimaryContainer, modifier = Modifier.size(28.dp))
+                        Icon(Icons.Filled.Person, null, tint = androidx.compose.ui.graphics.Color.Black, modifier = Modifier.size(28.dp))
                     }
                 }
                 Column(Modifier.weight(1f)) {
@@ -96,7 +96,7 @@ fun ProfileSheet(
 
             // idioma
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(stringResource(R.string.profile_language).uppercase(), style = PitText.DataLabelSm, color = PitColors.OnSurfaceVariant)
+                Text(stringResource(R.string.profile_language), style = PitText.DataLabelSm, color = PitColors.OnSurfaceVariant)
                 PitSegmented(
                     labels = listOf(stringResource(R.string.language_auto), "Português", "English"),
                     selected = LanguageChoice.entries.indexOf(language),

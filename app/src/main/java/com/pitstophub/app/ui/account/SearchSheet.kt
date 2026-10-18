@@ -106,9 +106,9 @@ fun SearchSheet(
                             }
                             Column(Modifier.weight(1f)) {
                                 Text(hit.title, style = PitText.BodyMd, color = PitColors.OnSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                                Text(hit.subtitle.uppercase(), style = PitText.DataLabelXs, color = PitColors.OnSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                Text(hit.subtitle, style = PitText.DataLabelXs, color = PitColors.OnSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
                             }
-                            Text(stringResource(hit.kind.label).uppercase(), style = PitText.DataLabelXs, color = PitColors.OnSurfaceVariant)
+                            Text(stringResource(hit.kind.label), style = PitText.DataLabelXs, color = PitColors.OnSurfaceVariant)
                         }
                     }
                 }

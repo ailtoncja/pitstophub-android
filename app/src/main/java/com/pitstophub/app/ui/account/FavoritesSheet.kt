@@ -115,7 +115,7 @@ fun FavoritesSheet(onDismiss: () -> Unit, onboarding: Boolean = false) {
             if (onboarding) Text(stringResource(R.string.onboarding_body), style = PitText.BodyMd, color = PitColors.OnSurfaceVariant)
 
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(stringResource(R.string.favorites_priority).uppercase(), style = PitText.DataLabel, color = PitColors.OnSurface)
+                Text(stringResource(R.string.favorites_priority), style = PitText.DataLabel, color = PitColors.OnSurface)
                 Text(stringResource(R.string.favorites_priority_hint), style = PitText.BodySm, color = PitColors.OnSurfaceVariant)
                 if (entries.isEmpty()) {
                     Text(
@@ -140,7 +140,7 @@ fun FavoritesSheet(onDismiss: () -> Unit, onboarding: Boolean = false) {
             }
 
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(stringResource(R.string.favorites_browse).uppercase(), style = PitText.DataLabel, color = PitColors.OnSurface)
+                Text(stringResource(R.string.favorites_browse), style = PitText.DataLabel, color = PitColors.OnSurface)
                 categories.forEach { category ->
                     val open = openId == category.id
                     val followed = category.teams.count { settings.followsTeam(category.id, it.id) } + category.drivers.count { settings.followsDriver(category.id, it.id) }
@@ -169,7 +169,7 @@ fun FavoritesSheet(onDismiss: () -> Unit, onboarding: Boolean = false) {
                                 HorizontalDivider(color = PitColors.HairlineSoft)
                                 Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
                                     if (category.teams.isNotEmpty()) {
-                                        Text(stringResource(R.string.favorites_teams).uppercase(), style = PitText.DataLabelSm, color = PitColors.OnSurfaceVariant)
+                                        Text(stringResource(R.string.favorites_teams), style = PitText.DataLabelSm, color = PitColors.OnSurfaceVariant)
                                         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                             category.teams.forEach { team ->
                                                 FollowChip(team.name, team.badge, settings.followsTeam(category.id, team.id)) { account.toggleTeam(category.id, team.id, team.name) }
@@ -177,7 +177,7 @@ fun FavoritesSheet(onDismiss: () -> Unit, onboarding: Boolean = false) {
                                         }
                                     }
                                     if (category.drivers.isNotEmpty()) {
-                                        Text(stringResource(R.string.favorites_drivers).uppercase(), style = PitText.DataLabelSm, color = PitColors.OnSurfaceVariant)
+                                        Text(stringResource(R.string.favorites_drivers), style = PitText.DataLabelSm, color = PitColors.OnSurfaceVariant)
                                         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                             category.drivers.forEach { driver ->
                                                 FollowChip(driver.name, driver.cutout ?: driver.image, settings.followsDriver(category.id, driver.id), round = true) {
@@ -227,7 +227,7 @@ private fun PriorityRow(
             Column(Modifier.weight(1f)) {
                 Text(entry.name, style = PitText.BodyMd, color = PitColors.OnSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Text(
-                    "${entry.categoryName} • ${stringResource(if (entry.isTeam) R.string.favorites_team else R.string.favorites_driver)}".uppercase(),
+                    "${entry.categoryName} • ${stringResource(if (entry.isTeam) R.string.favorites_team else R.string.favorites_driver)}",
                     style = PitText.DataLabelXs,
                     color = entry.color,
                     maxLines = 1,
@@ -250,8 +250,8 @@ private fun PriorityRow(
 private fun FollowChip(label: String, image: String?, active: Boolean, round: Boolean = false, onClick: () -> Unit) {
     Row(
         Modifier.clip(PitShapes.Card)
-            .background(if (active) PitColors.PrimaryContainer.copy(alpha = 0.16f) else PitColors.SurfaceHigh)
-            .border(1.dp, if (active) PitColors.PrimaryContainer.copy(alpha = 0.6f) else PitColors.Hairline, PitShapes.Card)
+            .background(if (active) androidx.compose.ui.graphics.Color.White else PitColors.SurfaceHigh)
+            .border(1.dp, if (active) androidx.compose.ui.graphics.Color.White else PitColors.Hairline, PitShapes.Card)
             .clickable(onClick = onClick)
             .padding(horizontal = 10.dp, vertical = 7.dp),
         verticalAlignment = Alignment.CenterVertically,

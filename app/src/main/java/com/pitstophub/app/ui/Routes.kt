@@ -2,10 +2,14 @@ package com.pitstophub.app.ui
 
 import kotlinx.serialization.Serializable
 
-// Rotas tipadas do Navigation Compose. As quatro primeiras sao as abas da barra inferior.
+// Rotas tipadas do Navigation Compose. Inicio, Agenda e Categorias sao abas da barra inferior; Perfil abre uma folha.
 
 @Serializable
 data object HomeRoute
+
+/** Todas as largadas a frente, de todas as categorias. */
+@Serializable
+data object AgendaRoute
 
 @Serializable
 data object CalendarRoute
