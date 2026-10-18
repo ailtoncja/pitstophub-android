@@ -2,45 +2,53 @@ package com.pitstophub.app.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-/** Paleta "Velocity Control" (DESIGN.md do Stitch). O app e escuro por padrao, como o design. */
+/**
+ * Paleta "Reel" (a mesma do site, DESIGN.md do repositorio pitstophub): fundo preto de midia, paineis neutros,
+ * branco como cor de interface e o vermelho de marca reservado para largada, ao vivo e "seguindo".
+ * Os nomes antigos continuam existindo com valores novos.
+ */
 object PitColors {
-    // Niveis de superficie
-    val Carbon = Color(0xFF000000)            // Level 0: fundo
-    val Surface = Color(0xFF121414)
-    val SurfaceLowest = Color(0xFF0C0F0F)
-    val SurfaceLow = Color(0xFF1A1C1C)
-    val SurfaceContainer = Color(0xFF1E2020)
-    val SurfaceHigh = Color(0xFF282A2B)
-    val SurfaceHighest = Color(0xFF333535)
-    val SurfaceBright = Color(0xFF37393A)
-    val Asphalt = Color(0xFF15151E)           // Level 1: cards
-    val AsphaltAlt = Color(0xFF1A1A24)        // linhas alternadas de tabela
+    // Superficies
+    val Carbon = Color(0xFF000000)
+    val Surface = Color(0xFF000000)
+    val SurfaceLowest = Color(0xFF060607)
+    val SurfaceLow = Color(0xFF121214)
+    val SurfaceContainer = Color(0xFF17171A)
+    val SurfaceHigh = Color(0xFF1E1E22)
+    val SurfaceHighest = Color(0xFF26262B)
+    val SurfaceBright = Color(0xFF2A2A2E)
+    val Asphalt = Color(0xFF0E0E10)
+    val AsphaltAlt = Color(0xFF151518)
 
     // Texto
-    val OnSurface = Color(0xFFE2E2E2)
-    val OnSurfaceVariant = Color(0xFFE9BCB5)
-    val Outline = Color(0xFFAF8781)
-    val OutlineVariant = Color(0xFF5E3F3A)
+    val OnSurface = Color(0xFFF4F4F6)
+    val OnSurfaceVariant = Color(0xFFB9B9C0)
+    val Silver = Color(0xFFB9B9C0)
+    val SilverDim = Color(0xFF8F8F98)
+    val Outline = Color(0xFF6F6F78)
+    val OutlineVariant = Color(0xFF3A3A40)
 
-    // Marca
-    val Primary = Color(0xFFFFB4A8)
-    val OnPrimary = Color(0xFF680200)
-    val PrimaryContainer = Color(0xFFE10600)  // Racing Red
-    val OnPrimaryContainer = Color(0xFFFFF2F0)
+    // Interface: branco. Vermelho so para largada, ao vivo e seguindo.
+    val Primary = Color(0xFFFFFFFF)
+    val OnPrimary = Color(0xFF000000)
+    val PrimaryContainer = Color(0xFFE10600)
+    val OnPrimaryContainer = Color(0xFFFFFFFF)
     val InversePrimary = Color(0xFFC00500)
+    val RacingRed = Color(0xFFE10600)
+    val Signal = Color(0xFFFF5A4F) // vermelho legivel como texto sobre preto
 
-    val Secondary = Color(0xFFC7C5D2)
-    val SecondaryContainer = Color(0xFF494853)
-    val Tertiary = Color(0xFFC6C6C6)
-    val TertiaryContainer = Color(0xFF707070)
+    val Secondary = Color(0xFFB9B9C0)
+    val SecondaryContainer = Color(0xFF26262B)
+    val Tertiary = Color(0xFFB9B9C0)
+    val TertiaryContainer = Color(0xFF3A3A40)
 
-    val Error = Color(0xFFFFB4AB)
+    val Error = Color(0xFFFF8A80)
     val ErrorContainer = Color(0xFF93000A)
 
-    // Estados de pista
-    val Success = Color(0xFF00D21D)
-    val Warning = Color(0xFFFFD200)
+    // Estados
+    val Success = Color(0xFF4AE176)
+    val Warning = Color(0xFFF5B301)
 
-    val Hairline = Color(0x1AFFFFFF)          // branco a 10%: borda de cards
-    val HairlineSoft = Color(0x0DFFFFFF)      // branco a 5%
+    val Hairline = Color(0x1FFFFFFF)     // branco a 12%
+    val HairlineSoft = Color(0x12FFFFFF) // branco a 7%
 }

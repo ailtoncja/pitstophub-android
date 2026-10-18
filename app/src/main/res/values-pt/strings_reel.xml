@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Navegação (igual ao site) -->
+    <string name="nav_agenda">Agenda</string>
+    <string name="nav_categories">Categorias</string>
+    <string name="nav_profile">Perfil</string>
+
+    <!-- Estado do dado, mostrado pela forma do filete -->
+    <string name="state_live">Ao vivo</string>
+    <string name="state_daily">Atualiza todo dia</string>
+    <string name="state_catalog">Classificação do catálogo</string>
+
+    <!-- Reel da Início -->
+    <string name="reel_empty">Nenhuma largada à frente agora.</string>
+    <string name="reel_next">A seguir</string>
+    <string name="reel_no_track">Obs.: desenho desta pista ainda não disponível</string>
+    <string name="reel_winner">Vencedor: %1$s</string>
+    <string name="reel_time_tbc">Horário a confirmar</string>
+    <string name="reel_round_of">Etapa %1$d de %2$d</string>
+    <string name="reel_round">Etapa %1$d</string>
+    <string name="reel_follow">Seguir</string>
+    <string name="reel_following">Seguindo</string>
+    <string name="reel_agenda">Agenda</string>
+    <string name="reel_share">Compartilhar</string>
+    <string name="reel_open">Abrir</string>
+
+    <!-- Agenda -->
+    <string name="agenda_all">Todas</string>
+    <string name="agenda_following">Seguindo</string>
+    <string name="agenda_subtitle">Todas as largadas à frente, no seu fuso.</string>
+    <string name="agenda_empty_following">Nenhuma largada das categorias que você segue. Siga uma categoria pela página dela para ver aqui.</string>
+    <string name="agenda_today">hoje</string>
+    <string name="agenda_tomorrow">amanhã</string>
+    <string name="agenda_tbc_note">Um traço no horário quer dizer que a fonte ainda não informou a hora da largada.</string>
+
+    <string name="categories_no_next">Sem largada marcada</string>
+
+    <!-- Abas da categoria -->
+    <string name="cat_tab_rules">Como funciona</string>
+    <string name="cat_tab_overview">Resumo</string>
+</resources>

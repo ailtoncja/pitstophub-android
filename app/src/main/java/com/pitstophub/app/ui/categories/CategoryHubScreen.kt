@@ -115,6 +115,7 @@ fun CategoryHubScreen(
     onOpenChampions: () -> Unit,
     onOpenRules: () -> Unit,
     modifier: Modifier = Modifier,
+    showTopBar: Boolean = true,
 ) {
     val portuguese = isPortuguese()
     val category = state.data?.category
@@ -125,7 +126,7 @@ fun CategoryHubScreen(
     var showAllDrivers by rememberSaveable { mutableStateOf(false) }
 
     Column(modifier.fillMaxSize().background(PitColors.Carbon)) {
-        PitDetailTopBar(title = category?.name ?: stringResource(R.string.categories_title), onBack = onBack)
+        if (showTopBar) PitDetailTopBar(title = category?.name ?: stringResource(R.string.categories_title), onBack = onBack)
         if (category == null) {
             Box(Modifier.fillMaxSize().padding(24.dp)) {
                 Text(stringResource(if (state.notFound) R.string.category_not_found else R.string.loading), style = PitText.BodyMd, color = PitColors.OnSurfaceVariant)
@@ -146,39 +147,8 @@ fun CategoryHubScreen(
             verticalArrangement = Arrangement.spacedBy(24.dp),
         ) {
             item(key = "hero") {
-                Box(
-                    Modifier.fillMaxWidth().clip(PitShapes.Soft)
-                        .background(Brush.linearGradient(listOf(accent.copy(alpha = 0.45f), PitColors.Asphalt, PitColors.Carbon)))
-                        .border(1.dp, PitColors.Hairline, PitShapes.Soft)
-                        .carbonTexture(0.04f),
-                ) {
-                    Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
-                            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                                group?.let { Text(stringResource(it.title).uppercase(), style = PitText.DataLabelSm, color = accent) }
-                                Text(category.name.uppercase(), style = PitText.HeadlineLgMobile, color = Color.White)
-                                Text(category.displayFullName(portuguese), style = PitText.BodyMd, color = PitColors.OnSurfaceVariant)
-                            }
-                            Box(
-                                Modifier.size(56.dp).clip(PitShapes.Card).background(accent.copy(alpha = 0.2f)).border(1.dp, accent.copy(alpha = 0.5f), PitShapes.Card),
-                                contentAlignment = Alignment.Center,
-                            ) { Icon(CategoryVisuals.icon(category.id), null, tint = accent, modifier = Modifier.size(30.dp)) }
-                        }
-                        Text(category.displayDescription(portuguese), style = PitText.BodySm, color = PitColors.OnSurface)
-                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                            FollowToggle(FollowKind.CATEGORY, settings.followsCategory(category.id), { account.toggleCategory(category.id, category.name) })
-                            Text(
-                                stringResource(if (settings.followsCategory(category.id)) R.string.hub_following else R.string.hub_follow_hint),
-                                style = PitText.DataLabelSm,
-                                color = PitColors.OnSurfaceVariant,
-                            )
-                        }
-                    }
-                }
-            }
-
-            if (category.rulesFormat.isNotEmpty()) {
-                item(key = "howto") { HowItWorksCard(category.name, onOpenRules) }
+                // nome, seguir e abas ja estao no cabecalho da categoria; aqui fica so a descricao
+                Text(category.displayDescription(portuguese), style = PitText.BodyLg, color = PitColors.Silver)
             }
 
             item(key = "stats") {
@@ -194,24 +164,18 @@ fun CategoryHubScreen(
                 }
             }
 
-            item(key = "actions") {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        HubAction(Icons.Filled.CalendarMonth, stringResource(R.string.nav_calendar), Modifier.weight(1f)) { onUseCategory(HubTarget.CALENDAR) }
-                        HubAction(Icons.Filled.Leaderboard, stringResource(R.string.nav_standings), Modifier.weight(1f)) { onUseCategory(HubTarget.STANDINGS) }
-                    }
-                    if (category.id == "f1") PitPrimaryButton(stringResource(R.string.hub_champions), onOpenChampions, Modifier.fillMaxWidth())
-                }
+            if (category.id == "f1") {
+                item(key = "actions") { PitOutlineButton(stringResource(R.string.hub_champions), onOpenChampions, Modifier.fillMaxWidth()) }
             }
 
             next?.let { race ->
                 item(key = "next") {
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         SectionHeader(stringResource(R.string.hub_next))
-                        PitCard(Modifier.fillMaxWidth().clickable { onOpenRace(race) }, borderColor = PitColors.Primary.copy(alpha = 0.4f)) {
+                        PitCard(Modifier.fillMaxWidth().clickable { onOpenRace(race) }) {
                             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                                Text(stringResource(R.string.round_label, race.round ?: 0).uppercase(), style = PitText.DataLabelSm, color = PitColors.Primary)
-                                Text(race.displayName(portuguese).uppercase(), style = PitText.HeadlineMd, color = Color.White, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                                Text(stringResource(R.string.round_label, race.round ?: 0), style = PitText.DataLabelSm, color = PitColors.Silver)
+                                Text(race.displayName(portuguese), style = PitText.HeadlineMd, color = Color.White, maxLines = 2, overflow = TextOverflow.Ellipsis)
                                 Text(
                                     "${RaceFormat.place(race.circuit, race.displayLocation(portuguese))} • ${RaceFormat.dateTime(race, currentLocale())}",
                                     style = PitText.DataLabelSm,
@@ -292,6 +256,6 @@ private fun HubAction(icon: ImageVector, label: String, modifier: Modifier, onCl
         horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         Icon(icon, null, tint = PitColors.Primary, modifier = Modifier.size(20.dp))
-        Text(label.uppercase(), style = PitText.ButtonLabel, color = PitColors.OnSurface, maxLines = 1)
+        Text(label, style = PitText.ButtonLabel, color = PitColors.OnSurface, maxLines = 1)
     }
 }

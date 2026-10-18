@@ -168,10 +168,10 @@ fun DriverDetailScreen(
                         Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
                             TeamBadge(team, 48.dp)
                             Column(Modifier.weight(1f)) {
-                                Text(stringResource(R.string.driver_team).uppercase(), style = PitText.DataLabelXs, color = PitColors.OnSurfaceVariant)
-                                Text(team.name.uppercase(), style = PitText.HeadlineMd.copy(fontSize = 20.sp, lineHeight = 24.sp), color = Color.White, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                                Text(stringResource(R.string.driver_team), style = PitText.DataLabelXs, color = PitColors.OnSurfaceVariant)
+                                Text(team.name, style = PitText.HeadlineMd.copy(fontSize = 20.sp, lineHeight = 24.sp), color = Color.White, maxLines = 2, overflow = TextOverflow.Ellipsis)
                             }
-                            Text(stringResource(R.string.action_open).uppercase(), style = PitText.DataLabel, color = PitColors.Primary)
+                            Text(stringResource(R.string.action_open), style = PitText.DataLabel, color = PitColors.Primary)
                         }
                     }
                 }
@@ -249,25 +249,25 @@ private fun DriverHero(state: DriverDetailState, category: Category) {
         Column(Modifier.align(Alignment.BottomStart).padding(start = 22.dp, end = 20.dp, bottom = 20.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 if (state.isChampionOnly) {
-                    Text(stringResource(R.string.driver_champion).uppercase(), style = PitText.DataLabel, color = PitColors.Primary)
+                    Text(stringResource(R.string.driver_champion), style = PitText.DataLabel, color = PitColors.Primary)
                 } else {
                     state.team?.let { team ->
                         Box(Modifier.size(10.dp).clip(CircleShape).background(color))
-                        Text(team.name.uppercase(), style = PitText.DataLabel, color = PitColors.OnSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        Text(team.name, style = PitText.DataLabel, color = PitColors.OnSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
                 }
                 val flag = Nationality.flag(nationality)
                 if (flag.isNotEmpty() || nationality.isNotBlank()) {
-                    Text("$flag ${Nationality.label(nationality, isPortuguese())}".trim().uppercase(), style = PitText.DataLabelSm, color = PitColors.OnSurfaceVariant, maxLines = 1)
+                    Text("$flag ${Nationality.label(nationality, isPortuguese())}".trim(), style = PitText.DataLabelSm, color = PitColors.OnSurfaceVariant, maxLines = 1)
                 }
             }
-            if (first.isNotEmpty()) Text(first.uppercase(), style = PitText.HeadlineMd, color = Color.White, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            if (first.isNotEmpty()) Text(first, style = PitText.HeadlineMd, color = Color.White, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Row(verticalAlignment = Alignment.Bottom) {
                 Text(
-                    last.uppercase(),
+                    last,
                     Modifier.weight(1f, fill = false),
                     style = PitText.DisplayLg.copy(fontSize = 44.sp, lineHeight = 46.sp),
-                    color = PitColors.PrimaryContainer,
+                    color = Color.White,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -334,7 +334,7 @@ private fun DuelSection(mine: String, mate: String, grid: Duel, race: Duel) {
         SectionHeader(stringResource(R.string.driver_duel))
         PitCard(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
-                Text(stringResource(R.string.driver_vs, shortName(mate)).uppercase(), style = PitText.DataLabelSm, color = PitColors.OnSurfaceVariant)
+                Text(stringResource(R.string.driver_vs, shortName(mate)), style = PitText.DataLabelSm, color = PitColors.OnSurfaceVariant)
                 if (grid.total > 0) DuelBar(stringResource(R.string.driver_duel_grid), shortName(mine), shortName(mate), grid)
                 if (race.total > 0) DuelBar(stringResource(R.string.driver_duel_race), shortName(mine), shortName(mate), race)
             }
@@ -353,11 +353,11 @@ private fun DuelBar(title: String, mine: String, mate: String, duel: Duel) {
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Text("${duel.mine}  $mine", Modifier.weight(1f), style = PitText.DataLabel, color = PitColors.Primary, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text(title.uppercase(), style = PitText.DataLabelXs, color = PitColors.OnSurfaceVariant)
+            Text(title, style = PitText.DataLabelXs, color = PitColors.OnSurfaceVariant)
             Text("$mate  ${duel.theirs}", Modifier.weight(1f), style = PitText.DataLabel, color = PitColors.OnSurfaceVariant, textAlign = TextAlign.End, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
         Row(Modifier.fillMaxWidth().height(6.dp).background(PitColors.SurfaceHighest)) {
-            if (share > 0f) Box(Modifier.weight(share).fillMaxHeight().background(PitColors.PrimaryContainer))
+            if (share > 0f) Box(Modifier.weight(share).fillMaxHeight().background(Color.White))
             if (share < 1f) Box(Modifier.weight(1f - share).fillMaxHeight().background(PitColors.SurfaceBright))
         }
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -382,7 +382,7 @@ private fun LastRoundsSection(rounds: List<DriverRound>, category: Category, por
                     val finish = row.finish
                     val accent = when {
                         finish != null && finish <= 3 -> PitColors.Success
-                        row.points > 0 -> PitColors.PrimaryContainer
+                        row.points > 0 -> PitColors.Success
                         else -> PitColors.SurfaceBright
                     }
                     Row(
@@ -401,7 +401,7 @@ private fun LastRoundsSection(rounds: List<DriverRound>, category: Category, por
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis,
                                 )
-                                if (row.grid == 1) Text(stringResource(R.string.driver_pole).uppercase(), style = PitText.DataLabelXs, color = PitColors.Primary)
+                                if (row.grid == 1) Text(stringResource(R.string.driver_pole), style = PitText.DataLabelXs, color = PitColors.Primary)
                             }
                             Text(RaceFormat.monthDay(row.date, locale), style = PitText.DataLabelXs, color = PitColors.OnSurfaceVariant)
                         }
@@ -418,7 +418,7 @@ private fun LastRoundsSection(rounds: List<DriverRound>, category: Category, por
 @Composable
 private fun RoundCell(label: String, value: String, tint: Color = PitColors.OnSurface, strong: Boolean = false) {
     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(54.dp)) {
-        Text(label.uppercase(), style = PitText.DataLabelXs, color = PitColors.OnSurfaceVariant, maxLines = 1, softWrap = false)
+        Text(label, style = PitText.DataLabelXs, color = PitColors.OnSurfaceVariant, maxLines = 1, softWrap = false)
         Text(value, style = PitText.DataLabel.copy(fontWeight = if (strong) FontWeight.Bold else FontWeight.Medium), color = tint, maxLines = 1)
     }
 }
@@ -436,7 +436,7 @@ private fun CareerSection(champion: com.pitstophub.app.data.model.F1Champion, po
                     Row(Modifier.fillMaxWidth().padding(14.dp), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
                             Text(stint.name, style = PitText.BodyMd.copy(fontWeight = FontWeight.SemiBold), color = PitColors.OnSurface)
-                            stint.series?.let { Text(it.text(portuguese).uppercase(), style = PitText.DataLabelXs, color = PitColors.OnSurfaceVariant) }
+                            stint.series?.let { Text(it.text(portuguese), style = PitText.DataLabelXs, color = PitColors.OnSurfaceVariant) }
                         }
                         Column(horizontalAlignment = Alignment.End) {
                             Text(stint.years, style = PitText.DataLabelSm, color = PitColors.OnSurface)
@@ -467,13 +467,13 @@ private fun BioSection(state: DriverDetailState, portuguese: Boolean) {
 private fun TitlesBlock(titles: List<DriverTitle>, portuguese: Boolean) {
     Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         Column(
-            Modifier.width(104.dp).fillMaxHeight().clip(PitShapes.Card).background(PitColors.PrimaryContainer).padding(12.dp),
+            Modifier.width(104.dp).fillMaxHeight().clip(PitShapes.Card).background(PitColors.SurfaceHigh).padding(12.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
         ) {
             Icon(Icons.Filled.EmojiEvents, null, Modifier.size(26.dp), tint = Color.White)
             Text(countTitles(titles).toString(), style = PitText.DisplayLg.copy(fontSize = 44.sp, lineHeight = 48.sp), color = Color.White)
-            Text(stringResource(R.string.driver_titles).uppercase(), style = PitText.DataLabelXs, color = Color.White.copy(alpha = 0.85f))
+            Text(stringResource(R.string.driver_titles), style = PitText.DataLabelXs, color = Color.White.copy(alpha = 0.85f))
         }
         PitCard(Modifier.weight(1f)) {
             Column {

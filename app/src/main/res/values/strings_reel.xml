@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Navigation (same as the site) -->
+    <string name="nav_agenda">Schedule</string>
+    <string name="nav_categories">Categories</string>
+    <string name="nav_profile">Profile</string>
+
+    <!-- Data state, shown by the shape of the mark -->
+    <string name="state_live">Live</string>
+    <string name="state_daily">Updated daily</string>
+    <string name="state_catalog">Standings from the catalog</string>
+
+    <!-- Home reel -->
+    <string name="reel_empty">No races ahead right now.</string>
+    <string name="reel_next">Up next</string>
+    <string name="reel_no_track">Note: this track map is not available yet</string>
+    <string name="reel_winner">Winner: %1$s</string>
+    <string name="reel_time_tbc">Time to be confirmed</string>
+    <string name="reel_round_of">Round %1$d of %2$d</string>
+    <string name="reel_round">Round %1$d</string>
+    <string name="reel_follow">Follow</string>
+    <string name="reel_following">Following</string>
+    <string name="reel_agenda">Calendar</string>
+    <string name="reel_share">Share</string>
+    <string name="reel_open">Open</string>
+
+    <!-- Schedule -->
+    <string name="agenda_all">All</string>
+    <string name="agenda_following">Following</string>
+    <string name="agenda_subtitle">Every start ahead, in your time zone.</string>
+    <string name="agenda_empty_following">No starts from the series you follow. Follow a series from its page to see them here.</string>
+    <string name="agenda_today">today</string>
+    <string name="agenda_tomorrow">tomorrow</string>
+    <string name="agenda_tbc_note">A dash in the time column means the source has not published the start time yet.</string>
+
+    <string name="categories_no_next">No start scheduled</string>
+
+    <!-- Category tabs -->
+    <string name="cat_tab_rules">How it works</string>
+    <string name="cat_tab_overview">Overview</string>
+</resources>

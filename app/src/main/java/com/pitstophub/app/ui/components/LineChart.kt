@@ -18,7 +18,7 @@ import com.pitstophub.app.ui.theme.PitColors
 
 /** Curva de evolucao (pontos acumulados): linha vermelha com area preenchida e marcador no ultimo ponto. */
 @Composable
-fun LineChart(values: List<Double>, modifier: Modifier = Modifier, height: Dp = 110.dp, color: Color = PitColors.PrimaryContainer) {
+fun LineChart(values: List<Double>, modifier: Modifier = Modifier, height: Dp = 110.dp, color: Color = Color.White) {
     if (values.size < 2) return
     Canvas(modifier.fillMaxWidth().height(height)) {
         val padTop = 10.dp.toPx()

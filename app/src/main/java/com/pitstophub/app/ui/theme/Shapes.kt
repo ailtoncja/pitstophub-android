@@ -2,65 +2,37 @@ package com.pitstophub.app.ui.theme
 
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Outline
-import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.graphics.drawOutline
-import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import kotlin.math.tan
 
-/** Raios do design: 0.125rem / 0.25rem / 0.5rem. */
+/** Raios do "Reel": paineis grandes, controles em pilula. */
 object PitShapes {
-    val Sharp = RoundedCornerShape(2.dp)
-    val Card = RoundedCornerShape(4.dp)
-    val Soft = RoundedCornerShape(8.dp)
+    val Sharp = RoundedCornerShape(12.dp)
+    val Card = RoundedCornerShape(16.dp)
+    val Soft = RoundedCornerShape(20.dp)
+    val Media = RoundedCornerShape(24.dp)
+    val Pill = RoundedCornerShape(percent = 50)
 }
 
-/** "Clipped corner" do design: corte de 45 graus no canto superior direito. */
+/** Antes era o canto cortado do visual antigo; agora e o canto arredondado dos paineis. */
+@Suppress("UNUSED_PARAMETER", "unused")
 class ClippedCornerShape(private val cut: Dp) : Shape {
-    override fun createOutline(size: Size, layoutDirection: LayoutDirection, density: Density): Outline {
-        val c = with(density) { cut.toPx() }.coerceAtMost(minOf(size.width, size.height))
-        return Outline.Generic(
-            Path().apply {
-                moveTo(0f, 0f)
-                lineTo(size.width - c, 0f)
-                lineTo(size.width, c)
-                lineTo(size.width, size.height)
-                lineTo(0f, size.height)
-                close()
-            },
-        )
-    }
+    override fun createOutline(size: Size, layoutDirection: LayoutDirection, density: Density): Outline =
+        PitShapes.Card.createOutline(size, layoutDirection, density)
 }
 
-/** Retangulo inclinado a 15 graus (`skewX(-15deg)` do CSS): topo deslocado para a direita. */
+/** Antes era o selo inclinado; agora e uma pilula. */
 object SkewShape : Shape {
-    private val tan15 = tan(Math.toRadians(15.0)).toFloat()
-
-    override fun createOutline(size: Size, layoutDirection: LayoutDirection, density: Density): Outline {
-        val offset = (size.height * tan15).coerceAtMost(size.width / 2f)
-        return Outline.Generic(
-            Path().apply {
-                moveTo(offset, 0f)
-                lineTo(size.width, 0f)
-                lineTo(size.width - offset, size.height)
-                lineTo(0f, size.height)
-                close()
-            },
-        )
-    }
+    override fun createOutline(size: Size, layoutDirection: LayoutDirection, density: Density): Outline =
+        PitShapes.Pill.createOutline(size, layoutDirection, density)
 }
 
-/** Sombra "decalque" do design: copia solida do formato, sem blur, deslocada. */
-fun Modifier.hardShadow(color: Color, shape: Shape, offsetX: Dp = 4.dp, offsetY: Dp = 4.dp): Modifier =
-    drawBehind {
-        val outline = shape.createOutline(size, layoutDirection, this)
-        translate(offsetX.toPx(), offsetY.toPx()) { drawOutline(outline, color) }
-    }
+/** A sombra dura do visual antigo foi aposentada: nao desenha nada. */
+@Suppress("UNUSED_PARAMETER", "UnusedReceiverParameter")
+fun Modifier.hardShadow(color: Color, shape: Shape, offsetX: Dp = 4.dp, offsetY: Dp = 4.dp): Modifier = this

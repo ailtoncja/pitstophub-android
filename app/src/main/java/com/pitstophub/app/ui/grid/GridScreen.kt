@@ -61,19 +61,16 @@ fun GridScreen(
     PullToRefreshBox(isRefreshing = state.refreshing, onRefresh = onRefresh, modifier = modifier.fillMaxSize()) {
         LazyColumn(
             Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 32.dp, bottom = 32.dp),
+            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 20.dp, bottom = 32.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             if (data?.offline == true) item(key = "offline") { OfflineNotice() }
             item(key = "header") {
-                Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min)) {
-                    Box(Modifier.width(4.dp).fillMaxHeight().background(PitColors.PrimaryContainer))
-                    Column(Modifier.padding(start = 16.dp)) {
-                        Text(stringResource(R.string.grid_title).uppercase(), style = PitText.HeadlineLg, color = PitColors.OnSurface)
-                        Spacer(Modifier.height(8.dp))
-                        Text(listOfNotNull(category?.name, data?.season).joinToString(" • "), style = PitText.DataLabel, color = PitColors.OnSurfaceVariant)
-                    }
-                }
+                Text(
+                    listOfNotNull(stringResource(R.string.grid_title), data?.season).joinToString(" · "),
+                    style = PitText.HeadlineMd,
+                    color = PitColors.OnSurface,
+                )
             }
             item(key = "toggle") {
                 PitSegmented(

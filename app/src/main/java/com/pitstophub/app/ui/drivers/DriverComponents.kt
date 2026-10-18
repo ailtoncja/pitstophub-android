@@ -74,7 +74,7 @@ fun DriverCard(
                     if (flag.isNotEmpty()) Text(flag, fontSize = 16.sp)
                 }
                 Text(
-                    driver.name.uppercase(),
+                    driver.name,
                     style = PitText.HeadlineMd.copy(fontSize = 18.sp, lineHeight = 22.sp),
                     color = Color.White,
                     maxLines = 2,
@@ -82,7 +82,7 @@ fun DriverCard(
                 )
                 val subtitle = listOfNotNull(team?.name, standing?.let { "${formatPoints(it.points)} pts" }).joinToString(" • ")
                 if (subtitle.isNotEmpty()) {
-                    Text(subtitle.uppercase(), style = PitText.DataLabelXs, color = PitColors.OnSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(subtitle, style = PitText.DataLabelXs, color = PitColors.OnSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
             }
             val portrait = driver.cutout ?: driver.image
@@ -114,8 +114,8 @@ fun DriverLine(driver: Driver, team: Team?, onClick: () -> Unit, modifier: Modif
             maxLines = 1,
         )
         Column(Modifier.weight(1f)) {
-            Text(driver.name.uppercase(), style = PitText.BodyMd, color = PitColors.OnSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            if (team != null) Text(team.name.uppercase(), style = PitText.DataLabelXs, color = PitColors.OnSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(driver.name, style = PitText.BodyMd, color = PitColors.OnSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            if (team != null) Text(team.name, style = PitText.DataLabelXs, color = PitColors.OnSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
         val flag = Nationality.flag(driver.nationality)
         if (flag.isNotEmpty()) Text(flag, fontSize = 18.sp)

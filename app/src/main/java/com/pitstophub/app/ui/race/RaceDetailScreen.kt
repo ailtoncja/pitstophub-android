@@ -136,30 +136,24 @@ private fun ActionButton(icon: ImageVector, label: String, modifier: Modifier, o
         horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         Icon(icon, null, tint = PitColors.Primary, modifier = Modifier.size(20.dp))
-        Text(label.uppercase(), style = PitText.ButtonLabel, color = PitColors.OnSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(label, style = PitText.ButtonLabel, color = PitColors.OnSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }
 
 @Composable
 private fun RaceHero(race: Race, category: Category, now: Instant, portuguese: Boolean) {
     val phase = if (race.status == RaceStatus.UPCOMING) RaceTime.phase(race, now) else null
-    Box(Modifier.fillMaxWidth().height(300.dp).clip(PitShapes.Soft)) {
-        HeroBackdrop(category.id, category.name, race, artHeight = 180.dp)
-        Column(Modifier.align(Alignment.BottomStart).padding(20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            SkewBadge(
-                text = stringResource(
-                    when {
-                        race.status == RaceStatus.COMPLETED -> R.string.status_completed
-                        race.status == RaceStatus.CANCELLED -> R.string.status_cancelled
-                        phase == RacePhase.LIVE -> R.string.status_live
-                        phase == RacePhase.AWAITING_RESULT -> R.string.status_awaiting
-                        else -> R.string.status_upcoming
-                    },
-                ),
-                live = phase == RacePhase.LIVE,
-            )
-            Text(race.displayName(portuguese).uppercase(), style = PitText.HeadlineLgMobile, color = Color.White, maxLines = 3, overflow = TextOverflow.Ellipsis)
-            if (phase == RacePhase.COUNTDOWN) CountdownPanel(RaceTime.startInstant(race), now)
+    Box(Modifier.fillMaxWidth().height(320.dp).clip(PitShapes.Media)) {
+        HeroBackdrop(category.id, category.name, race, artHeight = 190.dp)
+        Column(Modifier.align(Alignment.BottomStart).padding(20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(race.displayName(portuguese), style = PitText.HeadlineLgMobile, color = Color.White, maxLines = 3, overflow = TextOverflow.Ellipsis)
+            when {
+                phase == RacePhase.COUNTDOWN -> CountdownPanel(RaceTime.startInstant(race), now)
+                phase == RacePhase.LIVE -> SkewBadge(stringResource(R.string.status_live), live = true)
+                phase == RacePhase.AWAITING_RESULT -> SkewBadge(stringResource(R.string.status_awaiting))
+                race.status == RaceStatus.COMPLETED -> SkewBadge(stringResource(R.string.status_completed))
+                race.status == RaceStatus.CANCELLED -> SkewBadge(stringResource(R.string.status_cancelled))
+            }
         }
     }
 }
@@ -195,7 +189,7 @@ private fun WeatherSection(weather: RaceWeather) {
             WeatherTile(icon, stringResource(R.string.weather_temp), "${weather.temperatureMax.roundToInt()}°C", stringResource(condition), Modifier.weight(1f))
             WeatherTile(
                 Icons.Filled.WaterDrop, stringResource(R.string.weather_rain_chance), "${weather.rainChance}%", stringResource(rainRisk), Modifier.weight(1f),
-                tint = if (weather.rainChance >= 60) PitColors.PrimaryContainer else PitColors.Primary,
+                tint = PitColors.Silver,
             )
             WeatherTile(Icons.Filled.Air, stringResource(R.string.weather_wind), "${weather.windKmh.roundToInt()}", "km/h", Modifier.weight(1f))
         }
@@ -207,11 +201,11 @@ private fun WeatherTile(icon: ImageVector, label: String, value: String, caption
     PitCard(modifier) {
         Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                Text(label.uppercase(), style = PitText.DataLabelXs, color = PitColors.OnSurfaceVariant, maxLines = 1)
+                Text(label, style = PitText.DataLabelXs, color = PitColors.OnSurfaceVariant, maxLines = 1)
                 Icon(icon, null, tint = tint, modifier = Modifier.size(16.dp))
             }
             Text(value, style = PitText.DataValue.copy(fontSize = 22.sp, lineHeight = 24.sp), color = Color.White, maxLines = 1)
-            Text(caption.uppercase(), style = PitText.DataLabelXs, color = PitColors.OnSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            Text(caption, style = PitText.DataLabelXs, color = PitColors.OnSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
         }
     }
 }
@@ -231,7 +225,7 @@ private fun CircuitSection(info: CircuitInfo, circuitName: String, portuguese: B
                 )
                 if (info.drsZones.isNotEmpty()) {
                     Text(
-                        stringResource(R.string.circuit_drs_count, info.drsZones.size).uppercase(),
+                        stringResource(R.string.circuit_drs_count, info.drsZones.size),
                         Modifier.align(Alignment.BottomEnd).padding(10.dp).clip(PitShapes.Card).background(PitColors.SurfaceHigh).padding(horizontal = 8.dp, vertical = 4.dp),
                         style = PitText.DataLabelXs, color = PitColors.OnSurface,
                     )
@@ -250,7 +244,7 @@ private fun CircuitSection(info: CircuitInfo, circuitName: String, portuguese: B
             Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
                 Icon(Icons.Filled.Timer, null, tint = PitColors.OnSurfaceVariant, modifier = Modifier.size(26.dp))
                 Column(Modifier.weight(1f)) {
-                    Text(stringResource(R.string.circuit_record).uppercase(), style = PitText.DataLabelXs, color = PitColors.OnSurfaceVariant)
+                    Text(stringResource(R.string.circuit_record), style = PitText.DataLabelXs, color = PitColors.OnSurfaceVariant)
                     val record = info.lapRecord
                     if (record != null) {
                         Text("${record.time} • ${record.driver} (${record.year})", style = PitText.BodyMd, color = PitColors.OnSurface)
@@ -258,11 +252,11 @@ private fun CircuitSection(info: CircuitInfo, circuitName: String, portuguese: B
                         Text(stringResource(R.string.circuit_no_record), style = PitText.BodyMd, color = PitColors.OnSurfaceVariant)
                     }
                 }
-                Text(stringResource(R.string.circuit_since, info.firstGrandPrix).uppercase(), style = PitText.DataLabelXs, color = PitColors.Primary)
+                Text(stringResource(R.string.circuit_since, info.firstGrandPrix), style = PitText.DataLabelXs, color = PitColors.Primary)
             }
         }
         if (info.brakingZones.isNotEmpty()) {
-            Text(stringResource(R.string.circuit_braking).uppercase(), style = PitText.DataLabel, color = PitColors.OnSurface)
+            Text(stringResource(R.string.circuit_braking), style = PitText.DataLabel, color = PitColors.OnSurface)
             PitCard(Modifier.fillMaxWidth()) {
                 Column {
                     info.brakingZones.forEachIndexed { index, zone ->
@@ -279,7 +273,7 @@ private fun CircuitSection(info: CircuitInfo, circuitName: String, portuguese: B
             }
         }
         if (info.drsZones.isNotEmpty()) {
-            Text(stringResource(R.string.circuit_drs).uppercase(), style = PitText.DataLabel, color = PitColors.OnSurface)
+            Text(stringResource(R.string.circuit_drs), style = PitText.DataLabel, color = PitColors.OnSurface)
             PitCard(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     info.drsZones.forEach { zone ->
@@ -291,7 +285,7 @@ private fun CircuitSection(info: CircuitInfo, circuitName: String, portuguese: B
                 }
             }
         }
-        Text(stringResource(R.string.circuit_tyres).uppercase(), style = PitText.DataLabel, color = PitColors.OnSurface)
+        Text(stringResource(R.string.circuit_tyres), style = PitText.DataLabel, color = PitColors.OnSurface)
         PitCard(Modifier.fillMaxWidth()) {
             Text(info.tyreStrategyNote.text(portuguese), Modifier.padding(14.dp), style = PitText.BodySm, color = PitColors.OnSurfaceVariant)
         }
@@ -323,7 +317,7 @@ private fun RaceInfo(race: Race, portuguese: Boolean) {
 @Composable
 private fun InfoRow(label: String, value: String) {
     Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Top) {
-        Text(label.uppercase(), style = PitText.DataLabelSm, color = PitColors.OnSurfaceVariant)
+        Text(label, style = PitText.DataLabelSm, color = PitColors.OnSurfaceVariant)
         Text(value, Modifier.weight(1f).padding(start = 16.dp), style = PitText.DataLabel, color = PitColors.OnSurface, textAlign = TextAlign.End)
     }
 }
@@ -347,7 +341,7 @@ private fun SessionsSection(sessions: List<SessionSlot>, now: Instant) {
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
-                            stringResource(sessionLabel(slot.kind)).uppercase(),
+                            stringResource(sessionLabel(slot.kind)),
                             style = PitText.DataLabel.copy(fontWeight = if (isRace) FontWeight.Bold else FontWeight.Medium),
                             color = if (isRace) PitColors.Primary else PitColors.OnSurface,
                         )
@@ -408,10 +402,10 @@ private fun ResultsTable(rows: List<RaceResultRow>, category: Category, onOpenDr
         Column {
             Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
                 val header = PitText.DataLabelXs
-                Text(stringResource(R.string.col_pos).uppercase(), Modifier.width(36.dp), style = header, color = PitColors.OnSurfaceVariant, textAlign = TextAlign.Center)
-                Text(stringResource(R.string.col_driver).uppercase(), Modifier.weight(1f).padding(horizontal = 8.dp), style = header, color = PitColors.OnSurfaceVariant)
-                Text(stringResource(R.string.col_time).uppercase(), Modifier.width(92.dp), style = header, color = PitColors.OnSurfaceVariant, textAlign = TextAlign.End)
-                Text(stringResource(R.string.col_pts).uppercase(), Modifier.width(36.dp), style = header, color = PitColors.OnSurfaceVariant, textAlign = TextAlign.End)
+                Text(stringResource(R.string.col_pos), Modifier.width(36.dp), style = header, color = PitColors.OnSurfaceVariant, textAlign = TextAlign.Center)
+                Text(stringResource(R.string.col_driver), Modifier.weight(1f).padding(horizontal = 8.dp), style = header, color = PitColors.OnSurfaceVariant)
+                Text(stringResource(R.string.col_time), Modifier.width(92.dp), style = header, color = PitColors.OnSurfaceVariant, textAlign = TextAlign.End)
+                Text(stringResource(R.string.col_pts), Modifier.width(36.dp), style = header, color = PitColors.OnSurfaceVariant, textAlign = TextAlign.End)
             }
             HorizontalDivider(color = PitColors.Hairline)
             rows.forEachIndexed { index, row ->
@@ -428,8 +422,8 @@ private fun ResultsTable(rows: List<RaceResultRow>, category: Category, onOpenDr
                         textAlign = TextAlign.Center,
                     )
                     Column(Modifier.weight(1f).padding(horizontal = 8.dp)) {
-                        Text(row.driver.uppercase(), style = PitText.HeadlineMd.copy(fontSize = 15.sp, lineHeight = 19.sp), color = PitColors.OnSurface, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                        Text(row.team.uppercase(), style = PitText.DataLabelXs, color = PitColors.OnSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        Text(row.driver, style = PitText.HeadlineMd.copy(fontSize = 15.sp, lineHeight = 19.sp), color = PitColors.OnSurface, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                        Text(row.team, style = PitText.DataLabelXs, color = PitColors.OnSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
                     Text(row.timeOrStatus, Modifier.width(92.dp), style = PitText.DataLabelSm.copy(fontSize = 11.sp), color = PitColors.OnSurface, textAlign = TextAlign.End, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     Text(formatPoints(row.points), Modifier.width(36.dp), style = PitText.DataLabel, color = PitColors.OnSurface, textAlign = TextAlign.End)

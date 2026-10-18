@@ -6,6 +6,16 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.material.icons.filled.GridView
+import androidx.compose.material.icons.outlined.GridView
+import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.outlined.Person
+import androidx.compose.ui.res.painterResource
+import com.pitstophub.app.ui.CategoryVisuals
+import com.pitstophub.app.ui.DataState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -82,9 +92,9 @@ import java.time.Instant
 
 enum class TopLevelTab(val label: Int, val filled: ImageVector, val outlined: ImageVector) {
     Home(R.string.nav_home, Icons.Filled.Home, Icons.Outlined.Home),
-    Calendar(R.string.nav_calendar, Icons.Filled.CalendarToday, Icons.Outlined.CalendarToday),
-    Standings(R.string.nav_standings, Icons.Filled.Leaderboard, Icons.Outlined.Leaderboard),
-    Grid(R.string.nav_grid, Icons.Filled.Group, Icons.Outlined.Group),
+    Agenda(R.string.nav_agenda, Icons.Filled.CalendarToday, Icons.Outlined.CalendarToday),
+    Categories(R.string.nav_categories, Icons.Filled.GridView, Icons.Outlined.GridView),
+    Profile(R.string.nav_profile, Icons.Filled.Person, Icons.Outlined.Person),
 }
 
 /** Relogio que atualiza a cada [intervalMs]; serve para a contagem regressiva. */
@@ -98,120 +108,100 @@ fun rememberNow(intervalMs: Long = 1_000): State<Instant> = produceState(Instant
 
 // --- barras ---------------------------------------------------------------------------------------
 
+/** Barra do topo (Inicio, Agenda, Categorias): escudo + PitStopHub, busca e avisos. */
 @Composable
 fun PitTopBar(
-    onMenu: () -> Unit,
+    @Suppress("UNUSED_PARAMETER") onMenu: () -> Unit,
     onSearch: () -> Unit,
     onAlerts: () -> Unit,
-    onProfile: () -> Unit,
-    profileInitials: String?,
+    @Suppress("UNUSED_PARAMETER") onProfile: () -> Unit,
+    @Suppress("UNUSED_PARAMETER") profileInitials: String?,
     alertsDot: Boolean,
     modifier: Modifier = Modifier,
     onBrandTap: () -> Unit = {},
 ) {
-    Column(modifier.fillMaxWidth().background(PitColors.Surface)) {
+    Column(modifier.fillMaxWidth().background(PitColors.Carbon)) {
         Row(
-            Modifier.statusBarsPadding().height(64.dp).fillMaxWidth().padding(horizontal = 4.dp),
+            Modifier.statusBarsPadding().height(56.dp).fillMaxWidth().padding(start = 16.dp, end = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            IconButton(onClick = onMenu) {
-                Icon(Icons.Filled.Menu, contentDescription = stringResource(R.string.cd_menu), tint = PitColors.Primary)
+            Row(
+                Modifier.weight(1f).clickable(interactionSource = remember { MutableInteractionSource() }, indication = null, onClick = onBrandTap),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                Image(painter = painterResource(R.drawable.ic_launcher_logo), contentDescription = null, modifier = Modifier.size(30.dp))
+                Text(
+                    text = stringResource(R.string.app_name),
+                    style = PitText.HeadlineMd.copy(fontWeight = FontWeight.ExtraBold, letterSpacing = (-0.04).em),
+                    color = Color.White,
+                    maxLines = 1,
+                )
             }
-            Text(
-                text = stringResource(R.string.brand_title),
-                modifier = Modifier.weight(1f).clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null,
-                    onClick = onBrandTap,
-                ),
-                style = PitText.HeadlineLgMobile.copy(fontSize = 24.sp, letterSpacing = (-0.05).em),
-                color = PitColors.Primary,
-                textAlign = TextAlign.Center,
-                maxLines = 1,
-            )
             IconButton(onClick = onSearch) {
-                Icon(Icons.Filled.Search, contentDescription = stringResource(R.string.cd_search), tint = PitColors.OnSurfaceVariant)
+                Icon(Icons.Filled.Search, contentDescription = stringResource(R.string.cd_search), tint = Color.White)
             }
             IconButton(onClick = onAlerts) {
                 Box {
-                    Icon(Icons.Filled.Notifications, contentDescription = stringResource(R.string.cd_alerts), tint = PitColors.OnSurfaceVariant)
+                    Icon(Icons.Outlined.Notifications, contentDescription = stringResource(R.string.cd_alerts), tint = Color.White)
                     if (alertsDot) {
-                        Box(Modifier.align(Alignment.TopEnd).size(8.dp).clip(CircleShape).background(PitColors.PrimaryContainer))
-                    }
-                }
-            }
-            IconButton(onClick = onProfile) {
-                Box(
-                    Modifier.size(32.dp).clip(CircleShape).background(if (profileInitials != null) PitColors.PrimaryContainer else PitColors.SurfaceHighest)
-                        .border(1.dp, PitColors.OutlineVariant, CircleShape),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    if (profileInitials != null) {
-                        Text(profileInitials, style = PitText.DataLabelSm.copy(fontWeight = FontWeight.Bold), color = PitColors.OnPrimaryContainer, maxLines = 1)
-                    } else {
-                        Icon(Icons.Filled.Person, stringResource(R.string.cd_profile), Modifier.size(18.dp), tint = PitColors.OnSurfaceVariant)
+                        Box(Modifier.align(Alignment.TopEnd).size(8.dp).clip(CircleShape).background(PitColors.RacingRed))
                     }
                 }
             }
         }
-        HorizontalDivider(thickness = 2.dp, color = PitColors.OutlineVariant)
+        HorizontalDivider(thickness = 1.dp, color = PitColors.Hairline)
     }
 }
 
-/** Barra de detalhe: voltar + titulo (e acoes opcionais a direita), no mesmo estilo da barra principal. */
+/** Barra de detalhe: voltar com o contexto ao lado (ex.: "F1 · Calendario 2026") e acoes opcionais a direita. */
 @Composable
 fun PitDetailTopBar(title: String, onBack: () -> Unit, modifier: Modifier = Modifier, actions: @Composable RowScope.() -> Unit = {}) {
-    Column(modifier.fillMaxWidth().background(PitColors.Surface)) {
-        Row(
-            Modifier.statusBarsPadding().height(64.dp).fillMaxWidth().padding(horizontal = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            IconButton(onClick = onBack) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.cd_back), tint = PitColors.Primary)
-            }
-            Text(
-                text = title.uppercase(),
-                modifier = Modifier.weight(1f).padding(horizontal = 4.dp),
-                style = PitText.HeadlineMd.copy(fontSize = 20.sp),
-                color = PitColors.Primary,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                textAlign = TextAlign.Center,
-            )
-            // sem acoes, reserva a largura do botao de voltar para o titulo ficar centralizado
-            Row(Modifier.widthIn(min = 48.dp), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically, content = actions)
+    Row(
+        modifier.fillMaxWidth().background(PitColors.Carbon).height(56.dp).padding(start = 4.dp, end = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        IconButton(onClick = onBack) {
+            Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.cd_back), tint = PitColors.Silver)
         }
-        HorizontalDivider(thickness = 2.dp, color = PitColors.OutlineVariant)
+        Text(
+            text = title,
+            modifier = Modifier.weight(1f).padding(end = 4.dp),
+            style = PitText.DataLabel,
+            color = PitColors.Silver,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        Row(horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically, content = actions)
     }
 }
 
+/** Navegacao inferior: Inicio, Agenda, Categorias e Perfil (igual ao site no celular). */
 @Composable
-fun PitBottomBar(selected: TopLevelTab, onSelect: (TopLevelTab) -> Unit, modifier: Modifier = Modifier) {
-    Column(modifier.fillMaxWidth().background(PitColors.SurfaceHighest)) {
-        // sombra dura vermelha no topo (shadow-[0_-4px_0_0_red] do design)
-        Box(Modifier.fillMaxWidth().height(4.dp).background(PitColors.PrimaryContainer))
-        Row(
-            Modifier.navigationBarsPadding().height(76.dp).fillMaxWidth().padding(horizontal = 4.dp),
-            verticalAlignment = Alignment.Top,
-        ) {
+fun PitBottomBar(selected: TopLevelTab?, onSelect: (TopLevelTab) -> Unit, modifier: Modifier = Modifier, profileInitials: String? = null) {
+    Column(modifier.fillMaxWidth().background(PitColors.Carbon)) {
+        HorizontalDivider(thickness = 1.dp, color = PitColors.Hairline)
+        Row(Modifier.navigationBarsPadding().height(68.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             TopLevelTab.entries.forEach { tab ->
                 val active = tab == selected
+                val tint = if (active) Color.White else PitColors.SilverDim
                 Column(
                     Modifier.weight(1f).fillMaxSize().clickable { onSelect(tab) },
                     horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center,
                 ) {
-                    Box(Modifier.fillMaxWidth().height(4.dp).background(if (active) PitColors.Primary else Color.Transparent))
-                    Spacer(Modifier.height(10.dp))
-                    Icon(
-                        imageVector = if (active) tab.filled else tab.outlined,
-                        contentDescription = null,
-                        tint = if (active) PitColors.Primary else PitColors.OnSurfaceVariant.copy(alpha = 0.7f),
-                    )
-                    Spacer(Modifier.height(2.dp))
+                    if (tab == TopLevelTab.Profile && profileInitials != null) {
+                        Box(Modifier.size(26.dp).clip(CircleShape).background(Color.White), contentAlignment = Alignment.Center) {
+                            Text(profileInitials, style = PitText.DataLabelSm.copy(fontWeight = FontWeight.Bold), color = Color.Black, maxLines = 1)
+                        }
+                    } else {
+                        Icon(imageVector = if (active) tab.filled else tab.outlined, contentDescription = null, tint = tint)
+                    }
+                    Spacer(Modifier.height(4.dp))
                     Text(
-                        text = stringResource(tab.label).uppercase(),
+                        text = stringResource(tab.label),
                         style = PitText.DataLabelXs.copy(fontWeight = if (active) FontWeight.Bold else FontWeight.Medium),
-                        color = if (active) PitColors.Primary else PitColors.OnSurfaceVariant.copy(alpha = 0.7f),
+                        color = tint,
                         maxLines = 1,
                     )
                 }
@@ -234,16 +224,12 @@ fun PulsingDot(color: Color, modifier: Modifier = Modifier, size: Dp = 6.dp) {
     Box(modifier.size(size).alpha(alpha).clip(CircleShape).background(color))
 }
 
-/** Selo vermelho inclinado a 15 graus ("NEXT RACE"). */
+/** Etiqueta de estado da largada (ao vivo com ponto vermelho, a confirmar...). Sem caixa colorida. */
 @Composable
 fun SkewBadge(text: String, modifier: Modifier = Modifier, live: Boolean = false) {
-    Row(
-        modifier.clip(SkewShape).background(PitColors.PrimaryContainer).padding(horizontal = 18.dp, vertical = 4.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
-    ) {
-        if (live) PulsingDot(Color.White)
-        Text(text.uppercase(), style = PitText.DataLabel, color = PitColors.OnPrimaryContainer)
+    Row(modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        if (live) PulsingDot(PitColors.RacingRed, size = 8.dp)
+        Text(text, style = PitText.DataLabel, color = if (live) Color.White else PitColors.Silver)
     }
 }
 
@@ -252,20 +238,20 @@ fun StatusChip(
     text: String,
     modifier: Modifier = Modifier,
     container: Color = PitColors.SurfaceHighest,
-    content: Color = PitColors.OnSurfaceVariant,
+    content: Color = PitColors.Silver,
     pulsing: Boolean = false,
 ) {
     Row(
-        modifier.clip(PitShapes.Card).background(container).padding(horizontal = 8.dp, vertical = 2.dp),
+        modifier.clip(PitShapes.Pill).background(container).padding(horizontal = 10.dp, vertical = 3.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         if (pulsing) PulsingDot(Color.White)
-        Text(text.uppercase(), style = PitText.DataLabelSm.copy(fontSize = 11.sp), color = content, maxLines = 1)
+        Text(text, style = PitText.DataLabelSm, color = content, maxLines = 1)
     }
 }
 
-/** Chip de categoria: selecionado = pele clara com canto cortado e sombra vermelha dura; com o icone da serie. */
+/** Pilula de filtro/categoria: selecionada = branca cheia. */
 @Composable
 fun CategoryChip(
     label: String,
@@ -273,64 +259,109 @@ fun CategoryChip(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     icon: ImageVector? = null,
-    accent: Color = PitColors.Primary,
+    @Suppress("UNUSED_PARAMETER") accent: Color = PitColors.Primary,
 ) {
-    val shape: Shape = if (selected) ClippedCornerShape(12.dp) else PitShapes.Sharp
     Row(
         modifier
-            .then(if (selected) Modifier.hardShadow(PitColors.PrimaryContainer, shape) else Modifier)
-            .clip(shape)
-            .background(if (selected) PitColors.Primary else PitColors.SurfaceHighest)
-            .then(if (selected) Modifier else Modifier.border(1.dp, PitColors.Hairline, shape))
+            .clip(PitShapes.Pill)
+            .background(if (selected) Color.White else Color.Transparent)
+            .border(1.dp, if (selected) Color.White else Color.White.copy(alpha = 0.22f), PitShapes.Pill)
             .clickable(onClick = onClick)
-            .padding(horizontal = 20.dp, vertical = 8.dp),
+            .heightIn(min = 40.dp)
+            .padding(horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        if (icon != null) Icon(icon, null, Modifier.size(20.dp), tint = if (selected) PitColors.OnPrimary else accent)
-        Text(
-            text = label,
-            style = PitText.HeadlineMd,
-            color = if (selected) PitColors.OnPrimary else PitColors.OnSurface,
-            maxLines = 1,
-        )
+        if (icon != null) Icon(icon, null, Modifier.size(18.dp), tint = if (selected) Color.Black else PitColors.Silver)
+        Text(label, style = PitText.DataLabel, color = if (selected) Color.Black else PitColors.Silver, maxLines = 1)
     }
 }
 
 // --- botoes ----------------------------------------------------------------------------------------
 
+/** Botao primario: pilula branca de 48 dp. */
 @Composable
 fun PitPrimaryButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    val shape = ClippedCornerShape(16.dp)
     Box(
-        modifier
-            .hardShadow(Color.White.copy(alpha = 0.1f), shape)
-            .clip(shape)
-            .background(PitColors.PrimaryContainer)
-            .clickable(onClick = onClick)
-            .padding(horizontal = 24.dp, vertical = 12.dp),
+        modifier.clip(PitShapes.Pill).background(Color.White).clickable(onClick = onClick).heightIn(min = 48.dp).padding(horizontal = 22.dp),
         contentAlignment = Alignment.Center,
     ) {
-        Text(text.uppercase(), style = PitText.ButtonLabel, color = Color.White, maxLines = 1)
+        Text(text, style = PitText.ButtonLabel, color = Color.Black, maxLines = 1)
     }
 }
 
+/** Botao secundario: pilula com contorno. */
 @Composable
 fun PitOutlineButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier, dim: Boolean = false) {
-    val shape = ClippedCornerShape(16.dp)
     Box(
-        modifier
-            .clip(shape)
-            .border(1.dp, if (dim) PitColors.OutlineVariant else Color.White, shape)
-            .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+        modifier.clip(PitShapes.Pill).border(1.dp, Color.White.copy(alpha = if (dim) 0.18f else 0.32f), PitShapes.Pill)
+            .clickable(onClick = onClick).heightIn(min = 48.dp).padding(horizontal = 20.dp),
         contentAlignment = Alignment.Center,
     ) {
+        Text(text, style = PitText.ButtonLabel, color = if (dim) PitColors.Silver else Color.White, maxLines = 1)
+    }
+}
+
+/** Glifo redondo de 48 dp (trilho do reel). Ativo = preenchido; `red` para "seguindo". */
+@Composable
+fun GlyphButton(
+    icon: ImageVector,
+    label: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    active: Boolean = false,
+    red: Boolean = false,
+) {
+    Column(
+        modifier.clickable(interactionSource = remember { MutableInteractionSource() }, indication = null, onClick = onClick),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Box(
+            Modifier.size(48.dp).clip(CircleShape)
+                .background(if (active) (if (red) PitColors.RacingRed else Color.White) else Color.Black.copy(alpha = 0.45f))
+                .border(1.dp, if (active) Color.Transparent else Color.White.copy(alpha = 0.18f), CircleShape),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(icon, contentDescription = label, tint = if (active && !red) Color.Black else Color.White, modifier = Modifier.size(22.dp))
+        }
+        Spacer(Modifier.height(4.dp))
+        Text(label, style = PitText.DataLabelXs, color = Color.White, maxLines = 1)
+    }
+}
+
+/** Forma do estado do dado: filete cheio = ao vivo, tracejado = diario, meio filete = catalogo. */
+@Composable
+fun StateMark(state: DataState, modifier: Modifier = Modifier, color: Color = Color.White) {
+    Canvas(modifier.size(width = 18.dp, height = 4.dp)) {
+        val y = size.height / 2
+        val stroke = 3.dp.toPx()
+        when (state) {
+            DataState.LIVE -> drawLine(color, Offset(0f, y), Offset(size.width, y), stroke)
+            DataState.DAILY -> {
+                val dash = size.width / 5
+                for (i in 0 until 3) drawLine(color, Offset(i * dash * 2, y), Offset(i * dash * 2 + dash, y), stroke)
+            }
+            DataState.CATALOG -> drawLine(color, Offset(0f, y), Offset(size.width / 2, y), stroke)
+        }
+    }
+}
+
+/** Estado do dado com o nome ao lado. */
+@Composable
+fun DataStateLabel(categoryId: String, modifier: Modifier = Modifier) {
+    val state = CategoryVisuals.dataState(categoryId)
+    Row(modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        StateMark(state)
         Text(
-            text.uppercase(),
-            style = PitText.ButtonLabel,
-            color = if (dim) PitColors.OnSurfaceVariant else PitColors.OnSurface,
-            maxLines = 1,
+            stringResource(
+                when (state) {
+                    DataState.LIVE -> R.string.state_live
+                    DataState.DAILY -> R.string.state_daily
+                    DataState.CATALOG -> R.string.state_catalog
+                },
+            ),
+            style = PitText.DataLabelXs,
+            color = PitColors.Silver,
         )
     }
 }
@@ -340,29 +371,21 @@ fun PitOutlineButton(text: String, onClick: () -> Unit, modifier: Modifier = Mod
 @Composable
 fun SectionHeader(title: String, modifier: Modifier = Modifier, actionLabel: String? = null, onAction: (() -> Unit)? = null) {
     Row(modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-        Text(
-            text = title.uppercase(),
-            modifier = Modifier
-                .weight(1f, fill = false)
-                .drawBehind { drawRect(PitColors.Primary, size = androidx.compose.ui.geometry.Size(4.dp.toPx(), size.height)) }
-                .padding(start = 12.dp),
-            style = PitText.HeadlineMd,
-            color = PitColors.OnSurface,
-        )
+        Text(text = title, modifier = Modifier.weight(1f, fill = false), style = PitText.HeadlineMd, color = Color.White)
         if (actionLabel != null && onAction != null) {
             Row(
-                Modifier.clickable(onClick = onAction).padding(start = 12.dp),
+                Modifier.clickable(onClick = onAction).heightIn(min = 48.dp).padding(start = 12.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
             ) {
-                Text(actionLabel.uppercase(), style = PitText.DataLabel, color = PitColors.Primary, maxLines = 1)
-                Icon(Icons.AutoMirrored.Filled.ArrowForward, null, Modifier.size(16.dp), tint = PitColors.Primary)
+                Text(actionLabel, style = PitText.DataLabel, color = Color.White, maxLines = 1)
+                Icon(Icons.AutoMirrored.Filled.ArrowForward, null, Modifier.size(16.dp), tint = Color.White)
             }
         }
     }
 }
 
-/** Card nivel 1 do design: Asphalt Grey com borda de 1 px a 10% de branco. */
+/** Painel: fundo #0E0E10, borda de 1 px a 12% de branco, raio 16. */
 @Composable
 fun PitCard(
     modifier: Modifier = Modifier,
@@ -409,21 +432,19 @@ fun NetworkImage(
 
 /** Dois-pontos que piscam (separador da contagem regressiva, "Live effect" do design). */
 @Composable
-fun BlinkingColon(modifier: Modifier = Modifier, style: androidx.compose.ui.text.TextStyle = PitText.DataValue, color: Color = PitColors.Primary) {
-    val transition = rememberInfiniteTransition(label = "colon")
-    val alpha by transition.animateFloat(1f, 0.25f, infiniteRepeatable(tween(900), RepeatMode.Reverse), label = "colon-alpha")
-    Text(":", modifier.alpha(alpha), style = style, color = color)
+fun BlinkingColon(modifier: Modifier = Modifier, style: androidx.compose.ui.text.TextStyle = PitText.DataValue, color: Color = PitColors.Silver) {
+    Text(" ", modifier, style = style, color = color)
 }
 
 /** Foto redonda do piloto; sem foto, mostra a inicial. */
 @Composable
 fun DriverAvatar(imageUrl: String?, fallback: String, modifier: Modifier = Modifier, size: Dp = 32.dp) {
     Box(
-        modifier.size(size).clip(CircleShape).background(PitColors.SurfaceHighest).border(1.dp, PitColors.OutlineVariant, CircleShape),
+        modifier.size(size).clip(CircleShape).background(PitColors.SurfaceHighest),
         contentAlignment = Alignment.Center,
     ) {
         if (imageUrl.isNullOrBlank()) {
-            Text(fallback.take(1).uppercase(), style = PitText.DataLabel, color = PitColors.OnSurfaceVariant)
+            Text(fallback.take(1).uppercase(), style = PitText.DataLabel, color = PitColors.Silver)
         } else {
             NetworkImage(imageUrl, Modifier.fillMaxSize(), alignment = Alignment.TopCenter)
         }
@@ -435,21 +456,15 @@ fun DriverAvatar(imageUrl: String?, fallback: String, modifier: Modifier = Modif
 fun OfflineNotice(modifier: Modifier = Modifier) {
     Row(
         modifier.fillMaxWidth().clip(PitShapes.Card).background(PitColors.SurfaceContainer)
-            .border(1.dp, PitColors.Warning.copy(alpha = 0.4f), PitShapes.Card).padding(12.dp),
+            .border(1.dp, PitColors.Hairline, PitShapes.Card).padding(12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         Box(Modifier.size(8.dp).clip(CircleShape).background(PitColors.Warning))
-        Text(stringResource(R.string.offline_notice), style = PitText.DataLabelSm, color = PitColors.OnSurfaceVariant)
+        Text(stringResource(R.string.offline_notice), style = PitText.BodySm, color = PitColors.Silver)
     }
 }
 
-/** Textura de fibra de carbono (linhas diagonais finas) usada no hero e nos cards destacados. */
-fun Modifier.carbonTexture(alpha: Float = 0.04f): Modifier = drawBehind {
-    val step = 10.dp.toPx()
-    var x = -size.height
-    while (x < size.width) {
-        drawLine(Color.White.copy(alpha = alpha), Offset(x, 0f), Offset(x + size.height, size.height), strokeWidth = 1.dp.toPx())
-        x += step
-    }
-}
+/** A textura de carbono do visual antigo foi aposentada. */
+@Suppress("UNUSED_PARAMETER", "UnusedReceiverParameter")
+fun Modifier.carbonTexture(alpha: Float = 0.04f): Modifier = this

@@ -131,7 +131,7 @@ fun TributeOverlay(state: TributesState) {
                     Icon(if (tribute.heart) Icons.Filled.Favorite else Icons.Filled.BugReport, null, tint = tribute.iconInk, modifier = Modifier.size(26.dp))
                 }
                 Spacer(Modifier.height(24.dp))
-                Text(tribute.label.uppercase(), style = PitText.DataLabel.copy(letterSpacing = 0.3.sp), color = tribute.color, textAlign = TextAlign.Center)
+                Text(tribute.label, style = PitText.DataLabel.copy(letterSpacing = 0.3.sp), color = tribute.color, textAlign = TextAlign.Center)
                 Spacer(Modifier.height(12.dp))
                 Text(tribute.text, style = PitText.HeadlineMd.copy(fontSize = 26.sp, lineHeight = 34.sp), color = Color.White, textAlign = TextAlign.Center)
                 Spacer(Modifier.height(24.dp))

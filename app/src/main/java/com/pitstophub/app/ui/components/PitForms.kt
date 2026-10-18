@@ -5,6 +5,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -48,6 +49,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -78,7 +80,7 @@ fun PitSheet(
         Column(modifier.fillMaxWidth().navigationBarsPadding().imePadding().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp).padding(bottom = 24.dp)) {
             Row(Modifier.fillMaxWidth().padding(bottom = 16.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    title.uppercase(),
+                    title,
                     Modifier.weight(1f).drawBehind { drawRect(PitColors.Primary, size = Size(4.dp.toPx(), size.height)) }.padding(start = 12.dp),
                     style = PitText.HeadlineMd,
                     color = PitColors.OnSurface,
@@ -110,7 +112,7 @@ fun PitTextField(
         value = value,
         onValueChange = onValueChange,
         modifier = modifier.fillMaxWidth(),
-        label = { Text(label.uppercase(), style = PitText.DataLabelSm) },
+        label = { Text(label, style = PitText.DataLabelSm) },
         supportingText = supportingText?.let { { Text(it, style = PitText.DataLabelSm) } },
         singleLine = true,
         enabled = enabled,
@@ -163,7 +165,7 @@ fun PitSwitchRow(
             enabled = enabled,
             colors = SwitchDefaults.colors(
                 checkedThumbColor = Color.White,
-                checkedTrackColor = PitColors.PrimaryContainer,
+                checkedTrackColor = androidx.compose.ui.graphics.Color.White,
                 uncheckedThumbColor = PitColors.OnSurfaceVariant,
                 uncheckedTrackColor = PitColors.SurfaceHighest,
                 uncheckedBorderColor = PitColors.OutlineVariant,
@@ -172,28 +174,28 @@ fun PitSwitchRow(
     }
 }
 
-/** Alternador de abas: pilulas retas com a ativa em vermelho (igual ao da Classificacao). */
+/** Alternador de abas: pilulas, a ativa branca. */
 @Composable
 fun PitSegmented(labels: List<String>, selected: Int, onSelect: (Int) -> Unit, modifier: Modifier = Modifier) {
     Row(
-        modifier.clip(PitShapes.Card).background(PitColors.SurfaceHigh)
-            .border(1.dp, PitColors.OutlineVariant.copy(alpha = 0.3f), PitShapes.Card)
+        modifier.clip(PitShapes.Pill).background(PitColors.Asphalt)
+            .border(1.dp, PitColors.Hairline, PitShapes.Pill)
             .horizontalScroll(rememberScrollState()).padding(4.dp),
         horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         labels.forEachIndexed { index, label ->
             val active = index == selected
             Box(
-                Modifier.clip(PitShapes.Card)
-                    .background(if (active) PitColors.PrimaryContainer else Color.Transparent)
+                Modifier.clip(PitShapes.Pill)
+                    .background(if (active) Color.White else Color.Transparent)
                     .clickable { onSelect(index) }
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                    .padding(horizontal = 16.dp, vertical = 10.dp),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
-                    label.uppercase(),
+                    label,
                     style = PitText.DataLabel,
-                    color = if (active) PitColors.OnPrimaryContainer else PitColors.OnSurfaceVariant,
+                    color = if (active) Color.Black else PitColors.Silver,
                     maxLines = 1,
                 )
             }
@@ -210,14 +212,14 @@ fun PitStatTile(
     highlight: Boolean = false,
     caption: String? = null,
 ) {
-    PitCard(modifier, borderColor = if (highlight) PitColors.Primary.copy(alpha = 0.4f) else PitColors.Hairline) {
+    PitCard(modifier) {
         Column(Modifier.padding(14.dp)) {
-            Text(label.uppercase(), style = PitText.DataLabelXs, color = PitColors.OnSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Spacer(Modifier.height(6.dp))
-            Text(value, style = PitText.DataValue.copy(fontSize = 24.sp, lineHeight = 26.sp), color = if (highlight) PitColors.Primary else Color.White, maxLines = 1)
+            Text(label, style = PitText.BodySm, color = PitColors.Silver, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Spacer(Modifier.height(4.dp))
+            Text(value, style = PitText.DataValue.copy(fontSize = 18.sp, lineHeight = 22.sp, fontWeight = if (highlight) FontWeight.ExtraBold else FontWeight.Bold), color = Color.White, maxLines = 1)
             if (caption != null) {
-                Spacer(Modifier.height(4.dp))
-                Text(caption, style = PitText.DataLabelXs, color = PitColors.OnSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                Spacer(Modifier.height(2.dp))
+                Text(caption, style = PitText.BodySm, color = PitColors.Silver, maxLines = 2, overflow = TextOverflow.Ellipsis)
             }
         }
     }
@@ -234,32 +236,32 @@ fun FollowToggle(kind: FollowKind, following: Boolean, onClick: () -> Unit, modi
         FollowKind.DRIVER -> if (following) Icons.Filled.Bookmark else Icons.Filled.BookmarkBorder
     }
     Box(
-        modifier.size(size).clip(PitShapes.Card)
-            .background(if (following) PitColors.PrimaryContainer.copy(alpha = 0.18f) else PitColors.SurfaceHigh)
-            .border(1.dp, if (following) PitColors.PrimaryContainer.copy(alpha = 0.6f) else PitColors.Hairline, PitShapes.Card)
+        modifier.size(maxOf(size, 48.dp)).clip(CircleShape)
+            .background(if (following) PitColors.RacingRed else Color.Transparent)
+            .border(1.dp, if (following) PitColors.RacingRed else Color.White.copy(alpha = 0.25f), CircleShape)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
         Icon(
             icon,
             contentDescription = stringResource(if (following) R.string.action_unfollow else R.string.action_follow),
-            tint = if (following) PitColors.Primary else PitColors.OnSurfaceVariant,
-            modifier = Modifier.size(size * 0.5f),
+            tint = Color.White,
+            modifier = Modifier.size(22.dp),
         )
     }
 }
 
-/** Pilula de filtro pequena (grupos de categoria, classes de equipe): ativa em vermelho, as outras escuras. */
+/** Pilula de filtro (grupos de categoria, classes de equipe): ativa branca. */
 @Composable
 fun FilterPill(label: String, selected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Box(
-        modifier.clip(PitShapes.Card)
-            .background(if (selected) PitColors.PrimaryContainer else PitColors.SurfaceHigh)
-            .border(1.dp, if (selected) PitColors.PrimaryContainer else PitColors.Hairline, PitShapes.Card)
+        modifier.clip(PitShapes.Pill)
+            .background(if (selected) Color.White else Color.Transparent)
+            .border(1.dp, if (selected) Color.White else Color.White.copy(alpha = 0.22f), PitShapes.Pill)
             .clickable(onClick = onClick)
-            .padding(horizontal = 14.dp, vertical = 8.dp),
+            .padding(horizontal = 16.dp, vertical = 10.dp),
         contentAlignment = Alignment.Center,
     ) {
-        Text(label.uppercase(), style = PitText.DataLabel, color = if (selected) PitColors.OnPrimaryContainer else PitColors.OnSurfaceVariant, maxLines = 1)
+        Text(label, style = PitText.DataLabel, color = if (selected) Color.Black else PitColors.Silver, maxLines = 1)
     }
 }
