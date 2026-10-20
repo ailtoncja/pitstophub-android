@@ -22,9 +22,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
@@ -62,7 +60,6 @@ import com.pitstophub.app.ui.components.CategorySection
 import com.pitstophub.app.ui.components.PitBottomBar
 import com.pitstophub.app.ui.components.PitTopBar
 import com.pitstophub.app.ui.components.TopLevelTab
-import com.pitstophub.app.ui.components.UpdateBanner
 import com.pitstophub.app.ui.drivers.DriverDetailScreen
 import com.pitstophub.app.ui.drivers.DriverDetailViewModel
 import com.pitstophub.app.ui.grid.GridScreen
@@ -104,8 +101,6 @@ fun PitStopHubRoot(container: AppContainer, appViewModel: AppViewModel) {
     val alertsEnabled by account.alertsEnabled.collectAsStateWithLifecycle()
     val deepLink by appViewModel.deepLink.collectAsStateWithLifecycle()
     val allData by appViewModel.all.collectAsStateWithLifecycle()
-    val updateState by container.updater.state.collectAsStateWithLifecycle()
-    val context = LocalContext.current
 
     val destination = navController.currentBackStackEntryAsState().value?.destination
     val isTopLevel = destination == null || destination.hasRoute<HomeRoute>() || destination.hasRoute<AgendaRoute>() || destination.hasRoute<CategoriesRoute>()
@@ -220,21 +215,10 @@ fun PitStopHubRoot(container: AppContainer, appViewModel: AppViewModel) {
                         PitBottomBar(selected = currentTab, onSelect = ::openTab, profileInitials = session?.name?.trim()?.take(2)?.uppercase())
                     },
                 ) { padding ->
-                    Column(Modifier.padding(padding)) {
-                    // Versao nova: aviso no topo das abas principais (e enquanto baixa/instala, em qualquer tela).
-                    if (updateState.update != null && (isTopLevel || updateState.busy)) {
-                        UpdateBanner(
-                            state = updateState,
-                            onUpdate = container.updater::updateNow,
-                            onLater = container.updater::snooze,
-                            onAllowInstall = { runCatching { context.startActivity(container.updater.installPermissionIntent()) } },
-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                        )
-                    }
                     NavHost(
                         navController = navController,
                         startDestination = HomeRoute,
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.padding(padding),
                         enterTransition = { fadeIn(tween(180)) },
                         exitTransition = { fadeOut(tween(120)) },
                         popEnterTransition = { fadeIn(tween(180)) },
@@ -390,7 +374,6 @@ fun PitStopHubRoot(container: AppContainer, appViewModel: AppViewModel) {
                                 onOpen = { navController.navigate(DriverRoute("f1", it.id)) },
                             )
                         }
-                    }
                     }
                 }
 

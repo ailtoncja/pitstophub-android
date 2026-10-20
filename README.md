@@ -159,13 +159,11 @@ app/src/main/java/com/pitstophub/app/
   domain/                             # tempo de corrida, estatísticas de temporada, configurações do usuário
   notifications/                      # regras (AlertPlanner/ResultPlanner), agendamento e notificações
   i18n/                               # idioma escolhido no app
-  update/                             # atualizador pelos GitHub Releases (versao.json, download, PackageInstaller)
   ui/
     theme/                            # cores, tipografia e formas do design system
     components/                       # barras, botões, chips, formulários, gráfico de linha
     home/ calendar/ standings/ grid/ drivers/ teams/ race/ champions/ account/ tributes/   # uma pasta por tela
 tools/                                # exportação dos dados do PWA e servidor Supabase de teste
-scripts/publish-release.ps1           # gera o versao.json de um APK de release (ver "Distribuir o APK")
 app/src/main/assets/                          # catálogos exportados do PWA (motorsport_data, driver_extras, f1_champions, circuits)
 app/src/test/                                 # testes unitários
 ```
@@ -199,62 +197,22 @@ privacidade, exclusão de conta) foi guardado em `..\pitstophub-playstore-arquiv
 - **Backup da chave:** guarde uma cópia **offline** do keystore (`.jks`) e do `keystore.properties` (pendrive ou disco
   externo guardado fora do computador, ou cofre de senhas com anexo cifrado). Sem a chave não há como publicar
   atualizações para quem já instalou. Nunca coloque a chave ou as senhas no git, no Release ou em nuvem sem cifra.
-- **Publicar:** cada versão vira um **GitHub Release** (tag `vX.Y.Z` igual ao `versionName`) com dois anexos,
-  `pitstophub-X.Y.Z.apk` e `versao.json` (é dele que o atualizador do app lê a versão nova; veja abaixo). Nas notas
-  vão o SHA-256 do APK e o SHA-256 do certificado de assinatura. O certificado tem de ser **o mesmo em todos os
-  Releases**; se mudar, algo está errado (chave trocada ou APK adulterado). Quem baixar pode conferir o hash do arquivo
-  (`Get-FileHash` / `sha256sum`) e o certificado com `apksigner verify --print-certs` antes de instalar.
+- **Publicar:** cada APK compartilhado vira um **GitHub Release** (tag `vX.Y.Z` igual ao `versionName`) com o APK anexado e,
+  nas notas, o SHA-256 do arquivo e o SHA-256 do certificado de assinatura:
+
+  ```powershell
+  # SHA-256 do APK
+  Get-FileHash app\build\outputs\apk\release\app-release.apk -Algorithm SHA256
+  # Assinatura valida + SHA-256 do certificado (apksigner fica em <Android SDK>\build-tools\<versao>)
+  apksigner verify --verbose --print-certs app\build\outputs\apk\release\app-release.apk
+  ```
+
+  O certificado tem de ser **o mesmo em todos os Releases**; se mudar, algo está errado (chave trocada ou APK
+  adulterado). Quem baixar pode conferir o hash do arquivo (`Get-FileHash` / `sha256sum`) e o certificado com o mesmo
+  `apksigner verify --print-certs` antes de instalar.
+- **Atualizar quem já instalou:** aumente o `versionCode` em `app/build.gradle.kts` a cada APK novo que for compartilhar.
 - **Instalar:** baixar o APK do Release no celular, abrir e permitir "instalar apps de fontes desconhecidas" quando o
-  Android pedir. Depois disso o próprio app se atualiza.
-
-### Atualização automática (`update/AppUpdater.kt`)
-
-O app confere `https://github.com/ailtoncja/pitstophub-android/releases/latest/download/versao.json` ao abrir (no máximo
-a cada 30 min) e, com ele fechado, a cada 6 h (`WorkManager`). O `versao.json` tem este formato:
-
-```json
-{
-  "versionCode": 6,
-  "versionName": "1.4.0",
-  "apk": "https://github.com/ailtoncja/pitstophub-android/releases/download/v1.4.0/pitstophub-1.4.0.apk",
-  "sha256": "<SHA-256 do APK, 64 hex>",
-  "novidades": "Texto curto que aparece no aviso"
-}
-```
-
-- Só vale versão com `versionCode` maior que a instalada. O endereço do APK tem de ser um anexo de Release deste
-  repositório (`.../releases/download/<tag>/<arquivo>.apk`, sem `..`), o download é limitado a 60 MB (o `versao.json`
-  a 64 KB) e o SHA-256 do arquivo baixado tem de bater. Por fim o Android só instala por cima um APK assinado com a
-  **mesma chave**.
-- Com o app aberto aparece um aviso "Nova versão X disponível" com as novidades e **Atualizar** / **Depois** (adia só
-  aquela versão). Na primeira vez o botão vira **Permitir** e abre a tela do Android para liberar "instalar apps
-  desconhecidos" para o PitStopHub.
-- Com o app fechado e a instalação liberada, a versão nova é baixada e instalada sozinha (sem pergunta no Android 12+,
-  quando o sistema aceita; senão vem uma notificação "toque para atualizar"). Sem a permissão, vem só a notificação.
-- Desligado no build de debug (assinado com outra chave, o Android recusaria a atualização).
-- Quem está numa versão anterior ao atualizador (1.3.1 ou mais velha) precisa instalar a primeira versão com ele à mão.
-
-### Passo a passo de uma versão nova
-
-1. Aumente `versionCode` e `versionName` em `app/build.gradle.kts`.
-2. Gere o APK assinado: `./gradlew.bat :app:assembleRelease` (precisa do `keystore.properties` e do
-   `local.properties`; veja acima).
-3. Gere os anexos (não compila nada; lê a versão do próprio APK, confere a assinatura e calcula o SHA-256):
-
-   ```powershell
-   .\scripts\publish-release.ps1 -Apk app\build\outputs\apk\release\app-release.apk -Notes "O que mudou nesta versão"
-   ```
-
-   Saem em `app\build\release-assets\`: `pitstophub-X.Y.Z.apk`, `versao.json` e `notas.md` (novidades + SHA-256 do APK e
-   do certificado). Também dá para passar `-NotesFile notas.txt`.
-4. Publique o Release com os dois anexos (o script mostra o comando pronto):
-
-   ```powershell
-   gh release create vX.Y.Z app\build\release-assets\pitstophub-X.Y.Z.apk app\build\release-assets\versao.json --title "PitStopHub X.Y.Z" --notes-file app\build\release-assets\notas.md
-   ```
-
-   O Release tem de ser o **Latest** (não pode ser draft nem pre-release), senão o `releases/latest/download/versao.json`
-   continua apontando para o anterior. Os nomes dos anexos têm de ser exatamente esses.
+  Android pedir.
 
 ## Licenças
 
