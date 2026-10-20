@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="channel_updates_name">Atualizações do app</string>
+    <string name="channel_updates_desc">Saiu uma versão nova do PitStopHub</string>
+    <string name="update_available_title">Nova versão %1$s disponível</string>
+    <string name="update_default_notes">Melhorias e correções.</string>
+    <string name="update_now">Atualizar</string>
+    <string name="update_later">Depois</string>
+    <string name="update_allow">Permitir</string>
+    <string name="update_permission_hint">Para atualizar, permita que o PitStopHub instale apps (só desta vez).</string>
+    <string name="update_downloading">Baixando…</string>
+    <string name="update_downloading_percent">Baixando… %1$d%%</string>
+    <string name="update_installing">Instalando. O app fecha e volta já atualizado.</string>
+    <string name="update_failed">Não deu para atualizar agora. Tente de novo mais tarde.</string>
+    <string name="update_notification_text">Toque para abrir o app e atualizar.</string>
+</resources>
