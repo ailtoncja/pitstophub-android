@@ -29,8 +29,14 @@ class SupabaseSettingsClient(
 
     private val table: String get() = baseUrl.trimEnd('/') + "/rest/v1/user_settings"
 
+    // `no-store`: a resposta tem dados da conta e nao pode ir para o cache HTTP em disco.
     private fun headers(token: String, extra: Map<String, String> = emptyMap()) =
-        mapOf("apikey" to anonKey, "Authorization" to "Bearer $token", "Content-Type" to "application/json") + extra
+        mapOf(
+            "apikey" to anonKey,
+            "Authorization" to "Bearer $token",
+            "Content-Type" to "application/json",
+            "Cache-Control" to NO_STORE,
+        ) + extra
 
     /** Configuracoes salvas, ou null se a pessoa ainda nao tem linha (conta nova). Lanca em falha de rede. */
     suspend fun fetch(userId: String, token: String): UserSettings? {

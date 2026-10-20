@@ -2,6 +2,7 @@ package com.pitstophub.app.data.repo
 
 import com.pitstophub.app.FakeHttp
 import com.pitstophub.app.MemoryStore
+import com.pitstophub.app.TestCipher
 import com.pitstophub.app.data.remote.AuthError
 import com.pitstophub.app.data.remote.AuthResult
 import com.pitstophub.app.data.remote.SupabaseAuthClient
@@ -30,8 +31,11 @@ private val ABOUT_TO_EXPIRE = NOW.epochSecond + 20
 
 class AuthRepositoryTest {
 
+    // A chave do Keystore sobrevive a reabrir o app: o mesmo cifrador para todas as instancias do teste.
+    private val cipher = TestCipher()
+
     private fun repository(http: FakeHttp, store: MemoryStore = MemoryStore()) =
-        AuthRepository(SupabaseAuthClient(http.fetcher, "https://x.supabase.co", "anon"), SessionStore(store)) { NOW } to store
+        AuthRepository(SupabaseAuthClient(http.fetcher, "https://x.supabase.co", "anon"), SessionStore(store, cipher)) { NOW } to store
 
     @Test
     fun `valida os campos antes de falar com o servidor`() = runTest {
@@ -51,12 +55,12 @@ class AuthRepositoryTest {
 
         repo.login("  Ailton@Example.com ", "segredo-longo")
         assertEquals("u-1", repo.session.value?.userId)
-        assertTrue(store.values.containsKey("auth_session"))
+        assertTrue(store.values.containsKey(SessionStore.KEY))
         assertTrue(http.bodies.first().contains("ailton@example.com")) // e-mail normalizado
 
         repo.logout()
         assertNull(repo.session.value)
-        assertFalse(store.values.containsKey("auth_session"))
+        assertFalse(store.values.containsKey(SessionStore.KEY))
     }
 
     @Test
@@ -64,7 +68,7 @@ class AuthRepositoryTest {
         val http = FakeHttp { 200 to sessionJson("jwt-1", "refresh-1", LATER) }
         val (repo, store) = repository(http)
         repo.login("ailton@example.com", "segredo-longo")
-        val reopened = AuthRepository(SupabaseAuthClient(http.fetcher, "https://x.supabase.co", "anon"), SessionStore(store)) { NOW }
+        val reopened = AuthRepository(SupabaseAuthClient(http.fetcher, "https://x.supabase.co", "anon"), SessionStore(store, cipher)) { NOW }
         assertEquals("ailton@example.com", reopened.currentUser?.email)
     }
 
@@ -130,7 +134,7 @@ class UserSettingsRepositoryTest {
             if ("/auth/" in request.url.toString()) 200 to sessionJson("jwt-1", "refresh-1", LATER) else settingsResponse(request)
         }
         val cache = MemoryStore()
-        val auth = AuthRepository(SupabaseAuthClient(http.fetcher, "https://x.supabase.co", "anon"), SessionStore(MemoryStore())) { NOW }
+        val auth = AuthRepository(SupabaseAuthClient(http.fetcher, "https://x.supabase.co", "anon"), SessionStore(MemoryStore(), TestCipher())) { NOW }
         var accountLanguage: String? = null
         val repo = UserSettingsRepository(
             auth = auth,

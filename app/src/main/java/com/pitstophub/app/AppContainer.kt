@@ -12,6 +12,7 @@ import com.pitstophub.app.data.remote.SupabaseSettingsClient
 import com.pitstophub.app.data.remote.WeatherClient
 import com.pitstophub.app.data.repo.AuthRepository
 import com.pitstophub.app.data.repo.CategoryRepository
+import com.pitstophub.app.data.repo.KeystoreSessionKey
 import com.pitstophub.app.data.repo.PrefsKeyValueStore
 import com.pitstophub.app.data.repo.SessionStore
 import com.pitstophub.app.data.repo.UserSettingsRepository
@@ -39,6 +40,12 @@ class AppContainer(context: Context) {
 
     private val fetcher = HttpFetcher(httpClient)
 
+    /**
+     * Mesmo cliente (e pool de conexoes), mas sem cache em disco: login e `user_settings` levam o token do usuario e a
+     * resposta (tokens, dados da conta) nao pode ficar gravada em `cacheDir/http`.
+     */
+    private val privateFetcher = HttpFetcher(httpClient.newBuilder().cache(null).build())
+
     /** Escopo de trabalho que vive com o processo (sincronizacao de conta, avisos). */
     val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
@@ -61,13 +68,16 @@ class AppContainer(context: Context) {
     // --- conta -------------------------------------------------------------------------------------
 
     val auth = AuthRepository(
-        client = SupabaseAuthClient(fetcher, BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY),
-        store = SessionStore(PrefsKeyValueStore(context.getSharedPreferences("pitstophub_session", Context.MODE_PRIVATE))),
+        client = SupabaseAuthClient(privateFetcher, BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY),
+        store = SessionStore(
+            store = PrefsKeyValueStore(context.getSharedPreferences("pitstophub_session", Context.MODE_PRIVATE)),
+            cipher = KeystoreSessionKey().cipher(),
+        ),
     )
 
     val userSettings = UserSettingsRepository(
         auth = auth,
-        client = SupabaseSettingsClient(fetcher, BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY),
+        client = SupabaseSettingsClient(privateFetcher, BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY),
         cache = PrefsKeyValueStore(context.getSharedPreferences("pitstophub_settings", Context.MODE_PRIVATE)),
         scope = appScope,
         effectiveLanguage = { languages.effectiveCode(context) },

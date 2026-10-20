@@ -15,16 +15,54 @@ import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import java.time.Instant
 
-/** Guarda a sessao no armazenamento privado do app (sem backup: `allowBackup=false`). */
-class SessionStore(private val store: KeyValueStore) {
-    fun load(): AuthSession? = store.getString(KEY)?.let { raw ->
-        runCatching { AppJson.decodeFromString<AuthSession>(raw) }.getOrNull()
+/**
+ * Guarda a sessao cifrada (AES-GCM, chave no Android Keystore) no armazenamento privado do app (sem backup:
+ * `allowBackup=false`). Versoes antigas gravavam o JSON puro em [LEGACY_KEY]: na primeira leitura ele e cifrado de novo
+ * e apagado.
+ */
+class SessionStore(private val store: KeyValueStore, private val cipher: SessionCipher) {
+
+    fun load(): AuthSession? {
+        val sealed = store.getString(KEY)
+        if (sealed != null) {
+            val session = runCatching { AppJson.decodeFromString<AuthSession>(cipher.decrypt(sealed)) }.getOrNull()
+            if (session != null) {
+                store.putString(LEGACY_KEY, null)
+                return session
+            }
+            // Chave invalidada/apagada ou dado corrompido: descarta tudo e a pessoa entra de novo.
+            clear()
+            cipher.reset()
+            return null
+        }
+        val legacy = store.getString(LEGACY_KEY) ?: return null
+        val session = runCatching { AppJson.decodeFromString<AuthSession>(legacy) }.getOrNull()
+        // save() apaga o texto puro mesmo se a cifragem falhar (a sessao fica so na memoria ate fechar o app).
+        save(session)
+        return session
     }
 
-    fun save(session: AuthSession?) = store.putString(KEY, session?.let { AppJson.encodeToString(it) })
+    fun save(session: AuthSession?) {
+        if (session == null) return clear()
+        val plain = AppJson.encodeToString(session)
+        val sealed = runCatching { cipher.encrypt(plain) }.recoverCatching {
+            // Chave invalidada: cria outra e tenta uma vez mais.
+            cipher.reset()
+            cipher.encrypt(plain)
+        }.getOrNull()
+        // Sem cifra nao grava nada: nunca volta a salvar o token em texto puro.
+        store.putString(KEY, sealed)
+        store.putString(LEGACY_KEY, null)
+    }
 
-    private companion object {
-        const val KEY = "auth_session"
+    private fun clear() {
+        store.putString(KEY, null)
+        store.putString(LEGACY_KEY, null)
+    }
+
+    internal companion object {
+        const val KEY = "auth_session_enc"
+        const val LEGACY_KEY = "auth_session"
     }
 }
 
