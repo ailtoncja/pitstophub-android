@@ -20,6 +20,10 @@ import com.pitstophub.app.i18n.LanguageManager
 import com.pitstophub.app.notifications.AlertCoordinator
 import com.pitstophub.app.notifications.AlertLedger
 import com.pitstophub.app.notifications.AlertScheduler
+import com.pitstophub.app.update.ApkDownloader
+import com.pitstophub.app.update.ApkInstaller
+import com.pitstophub.app.update.AppUpdater
+import com.pitstophub.app.update.PackageManagerSigners
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -100,6 +104,29 @@ class AppContainer(context: Context) {
         preferences = alertPreferences,
         languages = languages,
         scope = appScope,
+    )
+
+    // --- atualizacao do app -------------------------------------------------------------------------
+
+    /**
+     * Novas versoes pelos GitHub Releases. O APK e baixado sem cache HTTP e sem seguir redirecionamentos sozinho (cada
+     * salto passa pela lista de enderecos permitidos), com prazo maior que o das chamadas de dados.
+     */
+    val updater = AppUpdater(
+        http = fetcher,
+        downloader = ApkDownloader(
+            httpClient.newBuilder()
+                .cache(null)
+                .followRedirects(false)
+                .followSslRedirects(false)
+                .readTimeout(30, TimeUnit.SECONDS)
+                .callTimeout(5, TimeUnit.MINUTES)
+                .build(),
+        ),
+        signers = PackageManagerSigners(context),
+        store = PrefsKeyValueStore(context.getSharedPreferences("pitstophub_update", Context.MODE_PRIVATE)),
+        dir = ApkInstaller.directory(context),
+        installedVersion = BuildConfig.VERSION_NAME,
     )
 
     /** O login so funciona com URL e anon key do Supabase no `local.properties`. */

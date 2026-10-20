@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- So a pasta dos APKs de atualizacao (cacheDir/updates) fica visivel ao instalador do Android. -->
+<paths>
+    <cache-path name="updates" path="updates/" />
+</paths>

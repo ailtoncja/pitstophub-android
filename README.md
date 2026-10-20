@@ -211,6 +211,15 @@ privacidade, exclusão de conta) foi guardado em `..\pitstophub-playstore-arquiv
   adulterado). Quem baixar pode conferir o hash do arquivo (`Get-FileHash` / `sha256sum`) e o certificado com o mesmo
   `apksigner verify --print-certs` antes de instalar.
 - **Atualizar quem já instalou:** aumente o `versionCode` em `app/build.gradle.kts` a cada APK novo que for compartilhar.
+- **Atualização dentro do app (desde a 1.3.2):** ao abrir, no máximo a cada 6 horas e sem travar a tela, o app consulta
+  `releases/latest` deste repositório (`update/AppUpdater.kt`). Se a tag `vX.Y.Z` for maior que o `versionName`
+  instalado, pergunta "Nova versão X.Y.Z disponível. Atualizar?". O APK só é baixado de
+  `github.com/ailtoncja/pitstophub-android/releases/download/...` (e dos servidores de arquivos do GitHub para onde
+  esse link redireciona), até 100 MB, para o cache privado; antes de instalar, o app confere o SHA-256 (campo `digest`
+  do asset no GitHub e/ou a linha "SHA-256 do APK" das notas: se nenhum existir ou não bater, recusa) e se o certificado
+  de assinatura é o mesmo do app instalado. A instalação passa pelo instalador do Android (com a confirmação de sempre);
+  na primeira vez ele pede para liberar "instalar apps desconhecidos" para o PitStopHub. Por isso, cada Release precisa
+  de **um** asset `pitstophub-X.Y.Z.apk` e do SHA-256 do APK nas notas, como acima.
 - **Instalar:** baixar o APK do Release no celular, abrir e permitir "instalar apps de fontes desconhecidas" quando o
   Android pedir.
 

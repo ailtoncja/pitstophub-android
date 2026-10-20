@@ -101,6 +101,7 @@ fun PitStopHubRoot(container: AppContainer, appViewModel: AppViewModel) {
     val alertsEnabled by account.alertsEnabled.collectAsStateWithLifecycle()
     val deepLink by appViewModel.deepLink.collectAsStateWithLifecycle()
     val allData by appViewModel.all.collectAsStateWithLifecycle()
+    val update by appViewModel.update.collectAsStateWithLifecycle()
 
     val destination = navController.currentBackStackEntryAsState().value?.destination
     val isTopLevel = destination == null || destination.hasRoute<HomeRoute>() || destination.hasRoute<AgendaRoute>() || destination.hasRoute<CategoriesRoute>()
@@ -416,6 +417,9 @@ fun PitStopHubRoot(container: AppContainer, appViewModel: AppViewModel) {
             }
 
             TributeOverlay(tributes)
+
+            // Versao nova nos GitHub Releases (conferida no inicio, no maximo a cada 6 horas).
+            UpdateDialog(state = update, snackbar = snackbar, appViewModel = appViewModel)
         }
     }
 }

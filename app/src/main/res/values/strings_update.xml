@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="update_title">Update available</string>
+    <string name="update_message">New version %1$s available. Update?</string>
+    <string name="update_now">Update</string>
+    <string name="update_later">Not now</string>
+    <string name="update_downloading">Downloading version %1$s…</string>
+    <string name="update_cancel">Cancel</string>
+    <string name="update_install">Install</string>
+    <string name="update_permission">To install it, allow PitStopHub to install apps (\"Install unknown apps\"), then tap Install.</string>
+    <string name="update_failed">Couldn\'t download the update. Try again later.</string>
+    <string name="update_rejected">The update failed the security check and was discarded.</string>
+</resources>
