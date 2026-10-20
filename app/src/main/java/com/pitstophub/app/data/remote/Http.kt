@@ -20,6 +20,9 @@ val AppJson: Json = Json {
     explicitNulls = false
 }
 
+/** Valor de `Cache-Control` das chamadas com token do usuario: o OkHttp nao grava a resposta no cache em disco. */
+const val NO_STORE = "no-store"
+
 /** Resposta HTTP completa: quem chama decide o que fazer com cada codigo (login precisa do corpo do erro). */
 data class HttpResult(val code: Int, val body: String) {
     val ok: Boolean get() = code in 200..299

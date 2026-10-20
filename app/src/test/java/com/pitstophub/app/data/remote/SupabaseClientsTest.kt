@@ -38,6 +38,7 @@ class SupabaseAuthClientTest {
         val request = http.requests.single()
         assertEquals("https://x.supabase.co/auth/v1/token?grant_type=password", request.url.toString())
         assertEquals("anon", request.header("apikey"))
+        assertEquals("no-store", request.header("Cache-Control")) // resposta com tokens fora do cache em disco
         assertTrue(http.bodies.single().contains("\"password\":\"segredo-longo\""))
     }
 
@@ -106,6 +107,7 @@ class SupabaseSettingsClientTest {
         assertEquals("Europe/Lisbon", settings.timezone)
         val request = http.requests.single()
         assertEquals("Bearer jwt-1", request.header("Authorization"))
+        assertEquals("no-store", request.header("Cache-Control"))
         assertTrue(request.url.toString().contains("user_id=eq.u-1"))
     }
 

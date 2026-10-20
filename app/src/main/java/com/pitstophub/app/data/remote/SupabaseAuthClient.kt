@@ -67,7 +67,9 @@ class SupabaseAuthClient(
     val enabled: Boolean get() = baseUrl.isNotBlank() && anonKey.isNotBlank()
 
     private val root: String get() = baseUrl.trimEnd('/') + "/auth/v1"
-    private val headers: Map<String, String> get() = mapOf("apikey" to anonKey, "Authorization" to "Bearer $anonKey")
+    // `no-store`: respostas com tokens nunca vao para o cache HTTP em disco.
+    private val headers: Map<String, String>
+        get() = mapOf("apikey" to anonKey, "Authorization" to "Bearer $anonKey", "Cache-Control" to NO_STORE)
 
     suspend fun signIn(email: String, password: String): AuthResult {
         if (!enabled) return AuthResult.Failure(AuthError.NOT_CONFIGURED)
@@ -98,7 +100,11 @@ class SupabaseAuthClient(
     suspend fun signOut(accessToken: String) {
         if (!enabled) return
         try {
-            http.execute("POST", "$root/logout", mapOf("apikey" to anonKey, "Authorization" to "Bearer $accessToken"))
+            http.execute(
+                "POST",
+                "$root/logout",
+                mapOf("apikey" to anonKey, "Authorization" to "Bearer $accessToken", "Cache-Control" to NO_STORE),
+            )
         } catch (_: IOException) {
             // Sem rede, a sessao local e descartada mesmo assim; o token expira sozinho no servidor.
         }
