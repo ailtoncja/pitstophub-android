@@ -50,6 +50,18 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    // O atualizador so instala sozinho com o app fora da tela; ao voltar, confere versao nova e a permissao.
+    override fun onStart() {
+        super.onStart()
+        container.updater.inForeground = true
+        container.updater.refresh()
+    }
+
+    override fun onStop() {
+        container.updater.inForeground = false
+        super.onStop()
+    }
+
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)

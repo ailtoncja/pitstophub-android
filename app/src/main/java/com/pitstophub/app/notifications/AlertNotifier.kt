@@ -46,6 +46,7 @@ class AlertLedger(private val preferences: SharedPreferences, private val clock:
 object AlertNotifier {
     const val CHANNEL_RACES = "race_alerts"
     const val CHANNEL_RESULTS = "results"
+    const val CHANNEL_UPDATES = "app_updates"
 
     const val EXTRA_CATEGORY = "alert_category_id"
     const val EXTRA_RACE = "alert_race_id"
@@ -62,6 +63,11 @@ object AlertNotifier {
         manager.createNotificationChannel(
             NotificationChannel(CHANNEL_RESULTS, context.getString(R.string.channel_results_name), NotificationManager.IMPORTANCE_DEFAULT).apply {
                 description = context.getString(R.string.channel_results_desc)
+            },
+        )
+        manager.createNotificationChannel(
+            NotificationChannel(CHANNEL_UPDATES, context.getString(R.string.channel_updates_name), NotificationManager.IMPORTANCE_DEFAULT).apply {
+                description = context.getString(R.string.channel_updates_desc)
             },
         )
     }
