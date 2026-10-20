@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="update_title">Atualização disponível</string>
+    <string name="update_message">Nova versão %1$s disponível. Atualizar?</string>
+    <string name="update_now">Atualizar</string>
+    <string name="update_later">Agora não</string>
+    <string name="update_downloading">Baixando a versão %1$s…</string>
+    <string name="update_cancel">Cancelar</string>
+    <string name="update_install">Instalar</string>
+    <string name="update_permission">Para instalar, permita que o PitStopHub instale apps (\"Instalar apps desconhecidos\") e depois toque em Instalar.</string>
+    <string name="update_failed">Não foi possível baixar a atualização. Tente mais tarde.</string>
+    <string name="update_rejected">A atualização não passou na verificação de segurança e foi descartada.</string>
+</resources>

@@ -6,13 +6,17 @@ import androidx.lifecycle.viewModelScope
 import com.pitstophub.app.AppContainer
 import com.pitstophub.app.data.model.Category
 import com.pitstophub.app.data.model.CategoryData
+import com.pitstophub.app.update.DownloadResult
+import com.pitstophub.app.update.ReleaseInfo
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.io.File
 
 data class CategoryState(
     val data: CategoryData? = null,
@@ -25,6 +29,22 @@ data class CategoryState(
 
 /** Destino pedido por fora do app (toque numa notificacao). */
 data class DeepLink(val categoryId: String, val raceId: String?)
+
+/** Atualizacao do app (dialogo na raiz). */
+sealed interface UpdateState {
+    data object Idle : UpdateState
+
+    /** Ha versao nova: pergunta "Atualizar?". */
+    data class Available(val release: ReleaseInfo) : UpdateState
+
+    data class Downloading(val release: ReleaseInfo) : UpdateState
+
+    /** APK baixado e conferido; falta o instalador do Android (ou liberar "instalar apps desconhecidos"). */
+    data class Ready(val release: ReleaseInfo, val apk: File) : UpdateState
+
+    /** Falhou ([rejected]: hash/assinatura/endereco nao conferem). Vira snackbar. */
+    data class Failed(val rejected: Boolean) : UpdateState
+}
 
 /** Categoria selecionada + dados dela, compartilhados pelas abas. */
 class AppViewModel(private val container: AppContainer) : ViewModel() {
@@ -48,6 +68,13 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
     private val _deepLink = MutableStateFlow<DeepLink?>(null)
     val deepLink: StateFlow<DeepLink?> = _deepLink.asStateFlow()
 
+    private val updater get() = container.updater
+
+    private val _update = MutableStateFlow<UpdateState>(UpdateState.Idle)
+    val update: StateFlow<UpdateState> = _update.asStateFlow()
+
+    private var downloadJob: Job? = null
+
     init {
         viewModelScope.launch {
             _categories.value = repository.categories()
@@ -55,6 +82,43 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
         }
         viewModelScope.launch { _selectedId.collectLatest { load(it, force = false) } }
         viewModelScope.launch { container.webData.warmUp() }
+        viewModelScope.launch {
+            // APKs de uma atualizacao anterior (instalada ou nao) ja nao servem.
+            updater.cleanup()
+            // Em segundo plano e calado: sem rede, ou sem versao nova, nada aparece.
+            updater.checkIfDue()?.let { _update.value = UpdateState.Available(it) }
+        }
+    }
+
+    // --- atualizacao do app ----------------------------------------------------------------------
+
+    fun startUpdate() {
+        val release = (_update.value as? UpdateState.Available)?.release ?: return
+        _update.value = UpdateState.Downloading(release)
+        downloadJob = viewModelScope.launch {
+            _update.value = when (val result = updater.download(release)) {
+                is DownloadResult.Ready -> UpdateState.Ready(release, result.apk)
+                is DownloadResult.Failed -> UpdateState.Failed(result.rejected)
+            }
+        }
+    }
+
+    /** "Agora nao" (pergunta, download ou instalacao): fecha e apaga o que tiver sido baixado. */
+    fun dismissUpdate() {
+        downloadJob?.cancel()
+        downloadJob = null
+        _update.value = UpdateState.Idle
+        updater.dismiss()
+        viewModelScope.launch { updater.cleanup() }
+    }
+
+    /** O APK foi entregue ao instalador do Android; ele e apagado no proximo inicio do app. */
+    fun updateHandedOff() {
+        _update.value = UpdateState.Idle
+    }
+
+    fun consumeUpdateFailure() {
+        if (_update.value is UpdateState.Failed) _update.value = UpdateState.Idle
     }
 
     fun select(categoryId: String) {
