@@ -37,8 +37,8 @@ android {
         minSdk = 26
         targetSdk = 37
         // Quem ja instalou so atualiza por cima se o versionCode do novo APK for maior.
-        versionCode = 5
-        versionName = "1.3.1"
+        versionCode = 6
+        versionName = "1.3.2"
 
         // Mesmos valores do .env do PWA (VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY).
         buildConfigField("String", "SUPABASE_URL", buildConfigString("SUPABASE_URL"))
