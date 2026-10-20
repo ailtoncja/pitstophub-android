@@ -193,9 +193,26 @@ privacidade, exclusão de conta) foi guardado em `..\pitstophub-playstore-arquiv
 - **Gerar:** `./gradlew.bat :app:assembleRelease` e pegar `app/build/outputs/apk/release/app-release.apk`. Precisa do
   `keystore.properties` (aponta para a chave em `..\pitstophub-keys`) e do `local.properties` com a anon key.
 - **Assinatura:** use **sempre a mesma chave**. Se um dia o APK sair assinado por outra chave, quem já instalou precisa
-  desinstalar antes de atualizar. Faça backup da chave e do `keystore.properties`.
+  desinstalar antes de atualizar.
+- **Backup da chave:** guarde uma cópia **offline** do keystore (`.jks`) e do `keystore.properties` (pendrive ou disco
+  externo guardado fora do computador, ou cofre de senhas com anexo cifrado). Sem a chave não há como publicar
+  atualizações para quem já instalou. Nunca coloque a chave ou as senhas no git, no Release ou em nuvem sem cifra.
+- **Publicar:** cada APK compartilhado vira um **GitHub Release** (tag `vX.Y.Z` igual ao `versionName`) com o APK anexado e,
+  nas notas, o SHA-256 do arquivo e o SHA-256 do certificado de assinatura:
+
+  ```powershell
+  # SHA-256 do APK
+  Get-FileHash app\build\outputs\apk\release\app-release.apk -Algorithm SHA256
+  # Assinatura valida + SHA-256 do certificado (apksigner fica em <Android SDK>\build-tools\<versao>)
+  apksigner verify --verbose --print-certs app\build\outputs\apk\release\app-release.apk
+  ```
+
+  O certificado tem de ser **o mesmo em todos os Releases**; se mudar, algo está errado (chave trocada ou APK
+  adulterado). Quem baixar pode conferir o hash do arquivo (`Get-FileHash` / `sha256sum`) e o certificado com o mesmo
+  `apksigner verify --print-certs` antes de instalar.
 - **Atualizar quem já instalou:** aumente o `versionCode` em `app/build.gradle.kts` a cada APK novo que for compartilhar.
-- **Instalar:** copiar o APK para o celular, abrir e permitir "instalar apps de fontes desconhecidas" quando o Android pedir.
+- **Instalar:** baixar o APK do Release no celular, abrir e permitir "instalar apps de fontes desconhecidas" quando o
+  Android pedir.
 
 ## Licenças
 
