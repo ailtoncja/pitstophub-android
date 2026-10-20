@@ -20,7 +20,6 @@ import com.pitstophub.app.i18n.LanguageManager
 import com.pitstophub.app.notifications.AlertCoordinator
 import com.pitstophub.app.notifications.AlertLedger
 import com.pitstophub.app.notifications.AlertScheduler
-import com.pitstophub.app.update.AppUpdater
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -102,10 +101,6 @@ class AppContainer(context: Context) {
         languages = languages,
         scope = appScope,
     )
-
-    // --- atualizacao do app ------------------------------------------------------------------------
-
-    val updater = AppUpdater(context, httpClient, languages, appScope)
 
     /** O login so funciona com URL e anon key do Supabase no `local.properties`. */
     val accountsAvailable: Boolean get() = auth.configured

@@ -16,7 +16,6 @@ class PitStopHubApp : Application(), SingletonImageLoader.Factory {
         super.onCreate()
         container = AppContainer(this)
         container.alerts.start()
-        container.updater.start()
     }
 
     // O Coil reaproveita o mesmo OkHttp (cache de disco e timeouts) do restante do app.
