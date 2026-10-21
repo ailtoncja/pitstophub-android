@@ -296,6 +296,7 @@ fun PitStopHubRoot(container: AppContainer, appViewModel: AppViewModel) {
                                 state = state,
                                 onBack = { navController.popBackStack() },
                                 onOpenDriver = { navController.navigate(DriverRoute(route.categoryId, it)) },
+                                onOpenRace = { navController.navigate(RaceRoute(route.categoryId, it)) },
                             )
                         }
                         composable<TeamRoute> { entry ->

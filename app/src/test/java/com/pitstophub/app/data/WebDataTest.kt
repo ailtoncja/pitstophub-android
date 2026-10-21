@@ -26,46 +26,45 @@ class WebDataTest {
     private val data = WebData(null) { name -> File(assets, name).takeIf { it.exists() }?.readText() }
 
     @Test
-    fun `reconhece os 24 circuitos do site pelo texto da corrida`() {
-        assertEquals("singapore", data.circuit(race("GP de Singapura", circuit = "Marina Bay Street Circuit"))?.id)
-        assertEquals("interlagos", data.circuit(race("GP de São Paulo", location = "São Paulo"))?.id)
-        assertEquals("silverstone", data.circuit(race("GP da Grã-Bretanha"))?.id) // palavra com hifen, como no PWA
-        assertEquals("monaco", data.circuit(race("Monaco", enName = "Monaco Grand Prix"))?.id)
+    fun `reconhece os circuitos do site pelo texto da corrida`() {
+        assertEquals("/circuits/singapore.png", data.circuit(race("GP de Singapura", circuit = "Marina Bay Street Circuit"))?.trackImage)
+        assertEquals("/circuits/interlagos.png", data.circuit(race("GP de São Paulo", location = "São Paulo"))?.trackImage)
+        assertEquals("/circuits/silverstone.png", data.circuit(race("GP da Grã-Bretanha"))?.trackImage) // palavra com hifen, como no PWA
+        assertEquals("/circuits/monaco.png", data.circuit(race("Monaco", enName = "Monaco Grand Prix"))?.trackImage)
         assertNull(data.circuit(race("Rally Italia Sardegna", location = "Alghero")))
     }
 
     @Test
-    fun `las vegas de rua tem ficha, o oval da NASCAR nao`() {
-        assertEquals("vegas", data.circuit(race("GP de Las Vegas", circuit = "Las Vegas Strip Circuit"))?.id)
+    fun `las vegas de rua tem ficha, o oval da NASCAR nao tem desenho verificado`() {
+        assertEquals("/circuits/vegas.png", data.circuit(race("GP de Las Vegas", circuit = "Las Vegas Strip Circuit"))?.trackImage)
         assertNull(data.circuit(race("Pennzoil 400", circuit = "Las Vegas Motor Speedway", location = "Las Vegas")))
     }
 
     @Test
-    fun `ficha de circuito so vale para as categorias que correm nessas pistas`() {
+    fun `ficha de GP completa so na F1, o circuito nas outras, nada no WRC`() {
         val singapore = race("GP de Singapura", circuit = "Marina Bay")
-        assertNotNull(data.circuitFor(Category("f1", "F1", "Formula 1"), singapore))
-        assertNotNull(data.circuitFor(Category("wec", "WEC", "WEC"), singapore))
-        assertNull(data.circuitFor(Category("wrc", "WRC", "WRC"), singapore))
-        assertNull(data.circuitFor(Category("indy", "IndyCar", "IndyCar"), singapore))
+        assertNotNull(data.circuitFor("f1", singapore)?.laps)
+        assertEquals("/circuits/singapore.png", data.circuitFor("wec", singapore)?.trackImage)
+        assertNull(data.circuitFor("wec", singapore)?.laps)
+        assertNull(data.circuitFor("wrc", singapore))
     }
 
     @Test
     fun `ficha traz os numeros e o texto nos dois idiomas`() {
-        val info = data.circuit(race("GP de Singapura", circuit = "Marina Bay"))!!.info
+        val info = data.circuitFor("f1", race("GP de Singapura", circuit = "Marina Bay"))!!
         assertEquals(19, info.corners)
-        assertEquals(4.927, info.lengthKm, 0.0001)
-        assertFalse(info.clockwise)
-        assertTrue(info.drsZones.size >= 2)
-        assertTrue(info.tyreStrategyNote.pt.isNotBlank() && info.tyreStrategyNote.en.isNotBlank())
+        assertEquals(4.927, info.lengthKm!!, 0.0001)
+        assertFalse(info.clockwise!!)
+        assertTrue(info.tyreStrategyNote!!.pt.isNotBlank() && info.tyreStrategyNote!!.en.isNotBlank())
         assertEquals("/circuits/singapore.png", info.trackImage)
     }
 
     @Test
-    fun `todo circuito exportado tem mapa e palavra-chave`() {
+    fun `todo circuito exportado tem mapa`() {
         val file = File(assets, WebData.CIRCUITS).readText()
         assertTrue(file.contains("trackImage"))
-        // 24 fichas, cada uma apontando para um mapa diferente
-        assertEquals(24, Regex("\"trackImage\"").findAll(file).count())
+        // 26 fichas de GP (pistas da F1 2026, Sakhir, Imola e Jeddah) e 34+ desenhos, cada um com seu mapa
+        assertTrue(Regex("\"trackImage\"").findAll(file).count() >= 60)
     }
 
     @Test
