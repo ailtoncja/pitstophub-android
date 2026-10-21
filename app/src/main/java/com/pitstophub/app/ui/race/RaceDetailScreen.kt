@@ -360,12 +360,12 @@ private fun ChangeNote(change: RaceChange, cancelled: Boolean, onOpenRace: (Stri
     // Na etapa cancelada a nota complementa o "Etapa cancelada"; na substituta, so a frase.
     if (cancelled && change is RaceChange.Replaces) return
     if (!cancelled && change !is RaceChange.Replaces) return
+    // O destaque acima ja diz "Etapa cancelada": a nota comeca pela substituta ("Substituída por ...").
     PitCard(Modifier.fillMaxWidth(), containerColor = PitColors.SurfaceLow) {
         Text(
-            if (cancelled) buildAnnotatedString {
-                withStyle(SpanStyle(fontWeight = FontWeight.Bold, color = Color.White)) { append(stringResource(R.string.race_cancelled)) }
-                append(" · ")
-                append(text)
+            if (text.isNotEmpty()) buildAnnotatedString {
+                append(text.text.take(1).uppercase(currentLocale()))
+                append(text.subSequence(1, text.length))
             } else text,
             Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
             style = PitText.BodyMd,
