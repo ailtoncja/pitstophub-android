@@ -20,7 +20,7 @@ A interface segue o design **Velocity Control** (exportado do Stitch): tema escu
 | **Piloto campeão** | Perfil de carreira de campeões da F1 que já saíram do grid (carta, títulos, equipes, biografia) |
 | **Equipe** | Carro, posição, pontos, diferença para a líder, pilotos, gráfico de evolução e biografia |
 | **Como funciona** | Guia de cada categoria (formato do fim de semana, pontuação, classes, carros e regras), com atalhos no topo. Aparece como cartão na Início e na página da categoria, e o link "Como funcionam os pontos?" da Classificação abre direto na seção de pontuação |
-| **Corrida** | Contagem regressiva, previsão do tempo (Open-Meteo), traçado oficial, curvas, recorde, zonas de frenagem/DRS, pneus, programação e resultado |
+| **Corrida** | Contagem regressiva, previsão do tempo (Open-Meteo), traçado (mapa oficial da F1 ou desenho do OpenStreetMap, com o traçado certo de cada categoria), curvas, recorde, zonas de Straight Mode, frenagem, pneus, programação e resultado. Etapas canceladas abrem com "Etapa cancelada" e o link da substituta (e a substituta, o da cancelada). No WRC, a ficha do rali: mapa das especiais, piso, números-chave, itinerário por dia e fontes |
 | **Campeões da F1** | Galeria com as cartas dos campeões mundiais, ordenável por títulos, recentes ou vitórias |
 | **Busca** | Pilotos, equipes, corridas e categorias em um só lugar |
 | **Conta** | Login e cadastro (Supabase Auth), perfil, favoritos com prioridade, onboarding, idioma |
@@ -111,9 +111,21 @@ O `src/debug` libera tráfego HTTP em texto claro só para `localhost`/`10.0.2.2
 
 ### Atualizar o catálogo exportado do PWA
 
-Os catálogos (pilotos, biografias, circuitos, campeões) foram exportados do PWA e já estão em `app/src/main/assets`. Os
-scripts `tools/export-web-data.mjs` e `tools/convert-champion-cards.mjs` leem o código do site na pasta irmã `..\pitstophub`
-(`npm install` antes). Para mudar um texto ou foto, o mais simples é editar o JSON em `assets/` direto.
+Os catálogos (pilotos, biografias, circuitos, campeões, fichas de rali) foram exportados do PWA e já estão em `app/src/main/assets`.
+O site é a fonte da verdade: rode o exportador de novo em vez de editar os JSON à mão.
+
+```bash
+cd ..\pitstophub && npm ci && npx tsx ..\pitstophub-android\tools\export-web-data.mjs
+```
+
+- `motorsport_data.json`: catálogo (`src/types.ts`), com os pares etapa cancelada/substituta.
+- `circuits.json` + `circuits/*.webp`: as regras de `src/circuit-info.ts` (lugares, traçados por categoria, fichas de GP) viram
+  dados e o app roda o mesmo algoritmo (`data/CircuitRouting.kt`). O exportador confere que o resultado é igual ao do site
+  em todas as etapas do catálogo e grava o esperado em `app/src/test/resources/circuit_routing_expected.json` para o
+  teste do app. Os mapas (oficiais da F1 e desenhos do OpenStreetMap) são convertidos para WebP de 960 px com o `sharp` do site.
+- `rally/*.json`: uma ficha por rali do WRC (`src/rally/`), lida só quando uma etapa do WRC abre, e um índice leve de datas.
+
+`tools/convert-champion-cards.mjs` também lê o site na pasta irmã `..\pitstophub`.
 
 ### Emulador no Windows
 
@@ -164,7 +176,7 @@ app/src/main/java/com/pitstophub/app/
     components/                       # barras, botões, chips, formulários, gráfico de linha
     home/ calendar/ standings/ grid/ drivers/ teams/ race/ champions/ account/ tributes/   # uma pasta por tela
 tools/                                # exportação dos dados do PWA e servidor Supabase de teste
-app/src/main/assets/                          # catálogos exportados do PWA (motorsport_data, driver_extras, f1_champions, circuits)
+app/src/main/assets/                          # exportados do PWA (motorsport_data, driver_extras, f1_champions, circuits + circuits/, rally/)
 app/src/test/                                 # testes unitários
 ```
 
@@ -176,14 +188,16 @@ app/src/test/                                 # testes unitários
 - O Compose não tem blur de fundo: os painéis de "vidro" são translúcidos com borda fina.
 - Todas as telas usam o fundo `#000000` (nível 0 do DESIGN.md); o design alterna com `#121414`.
 - O avatar do topo mostra a inicial da conta (ou um ícone de pessoa no modo visitante) e abre o perfil.
-- Mapas de circuito só existem para a F1 (copiados do PWA). As outras categorias mostram o nome da série como
-  marca d'água.
+- Mapas de circuito: os mapas oficiais da F1 2026 e os desenhos do OpenStreetMap do site, em todas as categorias, com o
+  traçado certo de cada uma (oval x misto). Onde o site não tem desenho verificado do traçado, não há mapa (nunca o de outro
+  traçado) e o fundo mostra o carro da série. Os desenhos do OpenStreetMap levam o crédito "© OpenStreetMap" com o link da
+  licença (ODbL).
 - `allowBackup=false`: o app não guarda nada que valha backup.
 
 ## Fora do escopo (por enquanto)
 
-Web Push/FCM (as notificações são locais, veja acima), a intro 3D do PWA e as páginas de circuito para categorias
-que não são a F1 (o site também só tem os dados detalhados da F1).
+Web Push/FCM (as notificações são locais, veja acima) e a intro 3D do PWA. Voltas, recorde, Straight Mode, frenagem e pneus só
+existem na ficha de GP da F1 (o site também só tem esses dados da F1).
 
 ## Distribuir o APK
 

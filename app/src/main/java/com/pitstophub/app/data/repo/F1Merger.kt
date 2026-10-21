@@ -64,24 +64,35 @@ object F1Merger {
     internal fun buildCalendar(base: Category, races: List<JRace>, winners: Map<String, String>, now: Instant): List<Race> =
         races.map { race ->
             val match = matchBaseRace(base.calendar, race)
+            // Uma etapa local casada so pelo nome (data diferente) pode ser de outro lugar -- ex.: o "Bahrain Grand
+            // Prix in Malaysia" de 2026 casa com o GP do Bahrein de Sakhir. Nesse caso o local (pista/cidade) vem
+            // da Jolpica, que sabe onde a prova acontece.
+            val venue = match?.takeIf { it.date == race.date || sameVenue(it, race) }
             val status = raceStatus(race, winners.containsKey(race.round), now)
             Race(
                 id = match?.id ?: TextUtil.slugify(race.raceName),
                 name = match?.name ?: formatPt(race.raceName),
                 enName = match?.enName ?: race.raceName,
-                location = match?.location ?: race.circuit.location.locality,
-                enLocation = match?.enLocation ?: race.circuit.location.locality,
+                location = venue?.location ?: race.circuit.location.locality,
+                enLocation = venue?.enLocation ?: race.circuit.location.locality,
                 date = race.date,
                 startsAt = isoInstant(race.date, race.time),
-                circuit = match?.circuit ?: race.circuit.circuitName,
+                circuit = venue?.circuit ?: race.circuit.circuitName,
                 status = status,
                 winner = winners[race.round] ?: if (status == RaceStatus.COMPLETED) match?.winner else null,
                 round = race.round.toIntOrNull(),
                 sessions = sessionsOf(race),
                 lat = race.circuit.location.lat?.toDoubleOrNull(),
                 lng = race.circuit.location.lng?.toDoubleOrNull(),
+                country = race.circuit.location.country.ifBlank { null },
             )
         }
+
+    /** A etapa local e a da Jolpica citam o mesmo lugar (cidade/pais/pista)? */
+    private fun sameVenue(base: Race, race: JRace): Boolean {
+        val live = tokens(race.circuit.location.locality, race.circuit.location.country, race.circuit.circuitName)
+        return tokens(base.location, base.enLocation).any { it in live }
+    }
 
     private fun raceStatus(race: JRace, hasResult: Boolean, now: Instant): RaceStatus {
         if (hasResult) return RaceStatus.COMPLETED

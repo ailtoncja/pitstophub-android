@@ -108,7 +108,6 @@
     <string name="weather_snow">Neve</string>
     <string name="weather_storm">Tempestade</string>
     <string name="circuit_layout">Traçado oficial</string>
-    <string name="circuit_drs_count">Zonas de DRS: %1$d</string>
     <string name="circuit_length">Extensão</string>
     <string name="circuit_corners">Curvas</string>
     <string name="circuit_clockwise">Sentido horário</string>
@@ -119,8 +118,20 @@
     <string name="circuit_no_record">Sem recorde — pista nova</string>
     <string name="circuit_since">Desde %1$d</string>
     <string name="circuit_braking">Zonas de frenagem</string>
-    <string name="circuit_drs">Zonas de DRS</string>
     <string name="circuit_tyres">Estratégia de pneus</string>
+
+    <string name="circuit_direction">Sentido</string>
+    <string name="circuit_straight_mode">Zonas de Straight Mode</string>
+    <string name="circuit_first_gp">Primeiro GP</string>
+    <string name="circuit_osm_credit">Desenho do traçado: © colaboradores do OpenStreetMap</string>
+    <string name="race_cancelled">Etapa cancelada</string>
+    <string name="change_replaced_by">substituída por %1$s</string>
+    <string name="change_moved_to">transferida para %1$s</string>
+    <string name="change_no_replacement">sem substituta</string>
+    <string name="change_replaces">Substitui %1$s (cancelada)</string>
+    <string name="change_replaces_many">Substitui %1$s (canceladas)</string>
+    <string name="change_moved_from">Transferida de %1$s, onde foi cancelada</string>
+    <string name="common_and">e</string>
 
     <!-- Como funciona -->
     <string name="rules_title">Como funciona</string>

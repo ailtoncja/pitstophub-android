@@ -3,9 +3,15 @@ package com.pitstophub.app.ui.race
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.pitstophub.app.AppContainer
+import com.pitstophub.app.data.CircuitRouting
 import com.pitstophub.app.data.model.CategoryData
-import com.pitstophub.app.data.model.CircuitEntry
+import com.pitstophub.app.data.model.CircuitInfo
 import com.pitstophub.app.data.model.Race
+import com.pitstophub.app.data.model.RallyInfo
+import com.pitstophub.app.domain.RaceChange
+import com.pitstophub.app.domain.RaceChanges
+import com.pitstophub.app.domain.RaceRoute
+import com.pitstophub.app.domain.RaceRoutes
 import com.pitstophub.app.data.model.RaceStatus
 import com.pitstophub.app.data.remote.RaceWeather
 import com.pitstophub.app.data.remote.WeatherClient
@@ -25,12 +31,22 @@ sealed interface ResultsState {
     data object Failed : ResultsState
 }
 
+/** Ficha do rali (WRC): carregando (so o id, pelo indice leve de datas) ou pronta. */
+sealed interface RallyState {
+    data object Loading : RallyState
+    data class Ready(val info: RallyInfo) : RallyState
+}
+
 data class RaceDetailState(
     val data: CategoryData? = null,
     val race: Race? = null,
     val results: ResultsState = ResultsState.NotAvailable,
-    /** Ficha tecnica do circuito (extensao, curvas, recorde, DRS, frenagem), quando o site tambem a tem. */
-    val circuit: CircuitEntry? = null,
+    /** Ficha tecnica do circuito (extensao, curvas, recorde, Straight Mode, frenagem), quando o site tambem a tem. */
+    val circuit: CircuitInfo? = null,
+    /** Etapa cancelada -> substituta(s); substituta -> cancelada(s) (pares do catalogo). */
+    val change: RaceChange? = null,
+    /** No WRC a ficha do rali ocupa o lugar do tracado; null fora do WRC ou sem ficha. */
+    val rally: RallyState? = null,
     /** Previsao do tempo para o dia da corrida; null quando nao ha coordenadas ou a data esta fora da janela. */
     val weather: RaceWeather? = null,
     val notFound: Boolean = false,
@@ -55,17 +71,30 @@ class RaceDetailViewModel(
         viewModelScope.launch {
             try {
                 val data = repository.load(categoryId)
-                val race = data.category.calendar.firstOrNull { it.id == raceId }
+                // O calendario ao vivo troca os ids do catalogo e nao lista etapas canceladas: o catalogo cobre esses links.
+                val race = when (val route = RaceRoutes.resolve(data.category.calendar, data.catalogCalendar, raceId)) {
+                    is RaceRoute.Found -> route.race
+                    is RaceRoute.Redirect -> data.category.calendar.firstOrNull { it.id == route.raceId }
+                    RaceRoute.Missing -> null
+                }
                 if (race == null) {
                     _state.value = RaceDetailState(data = data, notFound = true)
                     return@launch
                 }
+                // Rali nao tem circuito: no WRC a ficha do rali (mapa das especiais + itinerario) ocupa o lugar do tracado.
+                val rallyId = if (categoryId == CircuitRouting.WRC && race.status != RaceStatus.CANCELLED) container.webData.rallyIdFor(race) else null
                 _state.value = RaceDetailState(
                     data = data,
                     race = race,
                     results = initialResults(race),
-                    circuit = container.webData.circuitFor(data.category, race),
+                    circuit = container.webData.circuitFor(categoryId, race),
+                    change = RaceChanges.raceChange(data.catalogCalendar, race),
+                    rally = rallyId?.let { RallyState.Loading },
                 )
+                if (rallyId != null) {
+                    val info = container.webData.rally(rallyId)
+                    _state.value = _state.value.copy(rally = info?.let { RallyState.Ready(it) })
+                }
                 loadWeather(race)
                 if (categoryId == "f1" && race.status == RaceStatus.COMPLETED && race.round != null) {
                     try {

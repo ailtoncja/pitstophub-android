@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Ficha do rali (WRC), textos do site (src/lib/dictionary.ts, "rally.*") -->
+    <string name="rally_title">Mapa do rali</string>
+    <string name="rally_title_no_map">Ficha do rali</string>
+    <string name="rally_all_days">Todos</string>
+    <string name="rally_stages">Especiais</string>
+    <string name="rally_competitive_km">Km cronometrados</string>
+    <string name="rally_longest">Especial mais longa</string>
+    <string name="rally_power_stage">Power Stage</string>
+    <string name="rally_service">Parque de assistência</string>
+    <string name="rally_service_short">Assistência</string>
+    <string name="rally_not_published">Não publicado</string>
+    <string name="rally_surface_label">Piso</string>
+    <string name="rally_surface_gravel">Terra</string>
+    <string name="rally_surface_tarmac">Asfalto</string>
+    <string name="rally_surface_snow">Neve</string>
+    <string name="rally_surface_mixed">Misto</string>
+    <string name="rally_start">Largada</string>
+    <string name="rally_finish">Chegada</string>
+    <string name="rally_map_alt">Mapa das especiais e do parque de assistência</string>
+    <string name="rally_route_note">Traçado oficial das especiais, publicado pelo organizador.</string>
+    <string name="rally_points_note">Só largada e chegada de cada especial; o traçado não é desenhado.</string>
+    <string name="rally_no_map">Mapa indisponível</string>
+    <string name="rally_no_map_hint">O organizador não publicou a localização das especiais numa fonte que dê para conferir.</string>
+    <string name="rally_itinerary">Itinerário por dia</string>
+    <string name="rally_local_time">Horário local (%1$s)</string>
+    <plurals name="rally_day_totals">
+        <item quantity="one">%1$d especial · %2$s</item>
+        <item quantity="other">%1$d especiais · %2$s</item>
+    </plurals>
+    <string name="rally_day_no_stages">Sem especiais</string>
+    <string name="rally_shakedown">Shakedown, não conta</string>
+    <string name="rally_itinerary_note">Itinerário oficial do organizador (%1$s), como planejado; especiais canceladas durante a prova não aparecem aqui.</string>
+    <string name="rally_itinerary_note_no_version">Itinerário oficial do organizador, como planejado; especiais canceladas durante a prova não aparecem aqui.</string>
+    <string name="rally_itinerary_secondary">Itinerário de fonte secundária (o documento oficial não está acessível); especiais canceladas durante a prova não aparecem aqui.</string>
+    <string name="rally_no_times">A fonte não traz os horários das especiais.</string>
+    <string name="rally_sources">Fontes dos dados</string>
+    <string name="rally_secondary">fonte secundária</string>
+    <string name="rally_osm_source">Costa, parque de assistência e cidades: © OpenStreetMap contributors (ODbL)</string>
+</resources>

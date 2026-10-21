@@ -108,7 +108,6 @@
     <string name="weather_snow">Snow</string>
     <string name="weather_storm">Storm</string>
     <string name="circuit_layout">Official layout</string>
-    <string name="circuit_drs_count">DRS zones: %1$d</string>
     <string name="circuit_length">Length</string>
     <string name="circuit_corners">Corners</string>
     <string name="circuit_clockwise">Clockwise</string>
@@ -119,8 +118,20 @@
     <string name="circuit_no_record">No record — new track</string>
     <string name="circuit_since">Since %1$d</string>
     <string name="circuit_braking">Braking zones</string>
-    <string name="circuit_drs">DRS zones</string>
     <string name="circuit_tyres">Tyre strategy</string>
+
+    <string name="circuit_direction">Direction</string>
+    <string name="circuit_straight_mode">Straight Mode zones</string>
+    <string name="circuit_first_gp">First Grand Prix</string>
+    <string name="circuit_osm_credit">Track drawing: © OpenStreetMap contributors</string>
+    <string name="race_cancelled">Round cancelled</string>
+    <string name="change_replaced_by">replaced by %1$s</string>
+    <string name="change_moved_to">moved to %1$s</string>
+    <string name="change_no_replacement">no replacement</string>
+    <string name="change_replaces">Replaces %1$s (cancelled)</string>
+    <string name="change_replaces_many">Replaces %1$s (cancelled)</string>
+    <string name="change_moved_from">Moved from %1$s, where it was cancelled</string>
+    <string name="common_and">and</string>
 
     <!-- Como funciona -->
     <string name="rules_title">How it works</string>
