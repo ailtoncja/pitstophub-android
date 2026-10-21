@@ -37,13 +37,26 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.LinkAnnotation
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextLinkStyles
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withLink
+import androidx.compose.ui.text.withStyle
+import coil3.compose.AsyncImage
+import com.pitstophub.app.domain.RaceChange
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.pitstophub.app.R
@@ -81,7 +94,13 @@ import kotlin.math.roundToInt
 import java.time.Instant
 
 @Composable
-fun RaceDetailScreen(state: RaceDetailState, onBack: () -> Unit, onOpenDriver: (String) -> Unit, modifier: Modifier = Modifier) {
+fun RaceDetailScreen(
+    state: RaceDetailState,
+    onBack: () -> Unit,
+    onOpenDriver: (String) -> Unit,
+    onOpenRace: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val portuguese = isPortuguese()
     val locale = currentLocale()
     val context = LocalContext.current
@@ -107,6 +126,8 @@ fun RaceDetailScreen(state: RaceDetailState, onBack: () -> Unit, onOpenDriver: (
             verticalArrangement = Arrangement.spacedBy(24.dp),
         ) {
             item(key = "hero") { RaceHero(race, category, now, portuguese) }
+            // Etapa cancelada -> substituta(s) ou "sem substituta"; substituta -> cancelada(s). Links pelo id do catalogo.
+            state.change?.let { change -> item(key = "change") { ChangeNote(change, cancelled = race.status == RaceStatus.CANCELLED, onOpenRace = onOpenRace) } }
             item(key = "actions") {
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     ActionButton(Icons.Filled.CalendarMonth, stringResource(R.string.race_add_calendar), Modifier.weight(1f)) {
@@ -120,8 +141,13 @@ fun RaceDetailScreen(state: RaceDetailState, onBack: () -> Unit, onOpenDriver: (
             state.weather?.let { weather -> item(key = "weather") { WeatherSection(weather) } }
             item(key = "info") { RaceInfo(race, portuguese) }
             if (race.status == RaceStatus.COMPLETED) race.winner?.let { winner -> item(key = "winner") { WinnerBox(winner, category) } }
-            state.circuit?.info?.let { info -> item(key = "circuit") { CircuitSection(info, race.circuit, portuguese) } }
-            if (race.sessions.isNotEmpty()) item(key = "sessions") { SessionsSection(race.sessions, now) }
+            // No WRC a ficha do rali (mapa das especiais + itinerario) ocupa o lugar do tracado.
+            when (val rally = state.rally) {
+                RallyState.Loading -> item(key = "rally") { RallyLoading() }
+                is RallyState.Ready -> item(key = "rally") { RallySection(rally.info) }
+                null -> state.circuit?.let { info -> item(key = "circuit") { CircuitSection(info, race.circuit, portuguese) } }
+            }
+            if (race.sessions.isNotEmpty()) item(key = "sessions") { SessionsSection(race.sessions, now, cancelled = race.status == RaceStatus.CANCELLED) }
             item(key = "results") { ResultsSection(state.results, category, onOpenDriver) }
         }
     }
@@ -152,7 +178,7 @@ private fun RaceHero(race: Race, category: Category, now: Instant, portuguese: B
                 phase == RacePhase.LIVE -> SkewBadge(stringResource(R.string.status_live), live = true)
                 phase == RacePhase.AWAITING_RESULT -> SkewBadge(stringResource(R.string.status_awaiting))
                 race.status == RaceStatus.COMPLETED -> SkewBadge(stringResource(R.string.status_completed))
-                race.status == RaceStatus.CANCELLED -> SkewBadge(stringResource(R.string.status_cancelled))
+                race.status == RaceStatus.CANCELLED -> SkewBadge(stringResource(R.string.race_cancelled))
             }
         }
     }
@@ -212,35 +238,57 @@ private fun WeatherTile(icon: ImageVector, label: String, value: String, caption
 
 // --- circuito ---------------------------------------------------------------------------------------
 
+/** Um bloco de numero da ficha (rotulo, valor e legenda opcional). */
+private data class CircuitFact(val label: String, val value: String, val caption: String? = null)
+
 @Composable
 private fun CircuitSection(info: CircuitInfo, circuitName: String, portuguese: Boolean) {
-    val art = CircuitArt.forTrackImage(info.trackImage)
+    val art = CircuitArt.assetFor(info.trackImage)
+    val uriHandler = LocalUriHandler.current
+    val locale = currentLocale()
+    val direction = info.clockwise?.let { stringResource(if (it) R.string.circuit_clockwise else R.string.circuit_counterclockwise) }
+    // So os dados que a ficha tem: fora da F1 (e nos circuitos desenhados) nao ha voltas, recorde etc.
+    val facts = buildList {
+        info.lengthKm?.let { add(CircuitFact(stringResource(R.string.circuit_length), String.format(locale, "%.3f", it), "km")) }
+        when {
+            info.corners != null -> add(CircuitFact(stringResource(R.string.circuit_corners), info.corners.toString(), direction))
+            direction != null -> add(CircuitFact(stringResource(R.string.circuit_direction), direction))
+        }
+        info.laps?.let { add(CircuitFact(stringResource(R.string.circuit_laps), it.toString())) }
+        info.raceDistanceKm?.let { add(CircuitFact(stringResource(R.string.circuit_distance), String.format(locale, "%.1f", it), "km")) }
+        info.straightModeZones?.let { add(CircuitFact(stringResource(R.string.circuit_straight_mode), it.toString())) }
+    }
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         SectionHeader(stringResource(R.string.circuit_layout))
         if (art != null) {
-            Box(Modifier.fillMaxWidth().height(220.dp).clip(PitShapes.Soft).background(PitColors.SurfaceLowest).border(1.dp, PitColors.Hairline, PitShapes.Soft)) {
-                androidx.compose.foundation.Image(
-                    painterResource(art), circuitName,
-                    Modifier.fillMaxSize().padding(16.dp), contentScale = ContentScale.Fit,
-                )
-                if (info.drsZones.isNotEmpty()) {
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Box(Modifier.fillMaxWidth().aspectRatio(16f / 10f).clip(PitShapes.Soft).background(PitColors.SurfaceLowest).border(1.dp, PitColors.Hairline, PitShapes.Soft)) {
+                    AsyncImage(
+                        model = art,
+                        contentDescription = circuitName,
+                        modifier = Modifier.fillMaxSize().padding(16.dp),
+                        contentScale = ContentScale.Fit,
+                    )
+                }
+                // Desenho feito a partir do OpenStreetMap: o credito (ODbL) acompanha o desenho, com o link da licenca.
+                if (info.osm) {
                     Text(
-                        stringResource(R.string.circuit_drs_count, info.drsZones.size),
-                        Modifier.align(Alignment.BottomEnd).padding(10.dp).clip(PitShapes.Card).background(PitColors.SurfaceHigh).padding(horizontal = 8.dp, vertical = 4.dp),
-                        style = PitText.DataLabelXs, color = PitColors.OnSurface,
+                        stringResource(R.string.circuit_osm_credit),
+                        Modifier.align(Alignment.End).heightIn(min = 32.dp).clickable { uriHandler.openUri(CircuitArt.OSM_COPYRIGHT_URL) }.padding(vertical = 6.dp),
+                        style = PitText.DataLabelXs.copy(textDecoration = TextDecoration.Underline),
+                        color = PitColors.SilverDim,
                     )
                 }
             }
         }
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            PitStatTile(stringResource(R.string.circuit_length), "%.3f".format(info.lengthKm), Modifier.weight(1f), caption = "km")
-            PitStatTile(stringResource(R.string.circuit_corners), info.corners.toString(), Modifier.weight(1f), caption = stringResource(if (info.clockwise) R.string.circuit_clockwise else R.string.circuit_counterclockwise))
+        facts.chunked(2).forEach { pair ->
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                pair.forEach { fact -> PitStatTile(fact.label, fact.value, Modifier.weight(1f), caption = fact.caption) }
+                if (pair.size == 1) Spacer(Modifier.weight(1f))
+            }
         }
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            PitStatTile(stringResource(R.string.circuit_laps), info.laps.toString(), Modifier.weight(1f))
-            PitStatTile(stringResource(R.string.circuit_distance), "%.1f".format(info.raceDistanceKm), Modifier.weight(1f), caption = "km")
-        }
-        PitCard(Modifier.fillMaxWidth()) {
+        // A ficha do GP sempre diz o recorde (ou que a pista ainda nao tem um).
+        if (info.laps != null) PitCard(Modifier.fillMaxWidth()) {
             Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
                 Icon(Icons.Filled.Timer, null, tint = PitColors.OnSurfaceVariant, modifier = Modifier.size(26.dp))
                 Column(Modifier.weight(1f)) {
@@ -252,7 +300,7 @@ private fun CircuitSection(info: CircuitInfo, circuitName: String, portuguese: B
                         Text(stringResource(R.string.circuit_no_record), style = PitText.BodyMd, color = PitColors.OnSurfaceVariant)
                     }
                 }
-                Text(stringResource(R.string.circuit_since, info.firstGrandPrix), style = PitText.DataLabelXs, color = PitColors.Primary)
+                info.firstGrandPrix?.let { Text(stringResource(R.string.circuit_since, it), style = PitText.DataLabelXs, color = PitColors.Primary) }
             }
         }
         if (info.brakingZones.isNotEmpty()) {
@@ -272,23 +320,82 @@ private fun CircuitSection(info: CircuitInfo, circuitName: String, portuguese: B
                 }
             }
         }
-        if (info.drsZones.isNotEmpty()) {
-            Text(stringResource(R.string.circuit_drs), style = PitText.DataLabel, color = PitColors.OnSurface)
+        info.tyreStrategyNote?.let { note ->
+            Text(stringResource(R.string.circuit_tyres), style = PitText.DataLabel, color = PitColors.OnSurface)
             PitCard(Modifier.fillMaxWidth()) {
-                Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    info.drsZones.forEach { zone ->
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Text("▸", color = PitColors.Primary)
-                            Text(zone.text(portuguese), style = PitText.BodySm, color = PitColors.OnSurfaceVariant)
-                        }
-                    }
-                }
+                Text(note.text(portuguese), Modifier.padding(14.dp), style = PitText.BodySm, color = PitColors.OnSurfaceVariant)
             }
         }
-        Text(stringResource(R.string.circuit_tyres), style = PitText.DataLabel, color = PitColors.OnSurface)
-        PitCard(Modifier.fillMaxWidth()) {
-            Text(info.tyreStrategyNote.text(portuguese), Modifier.padding(14.dp), style = PitText.BodySm, color = PitColors.OnSurfaceVariant)
+    }
+}
+
+// --- etapa cancelada / substituta ------------------------------------------------------------------
+
+private const val MARK = "\u0000"
+
+/**
+ * "Etapa cancelada · substituída por Miami e Montreal →", "transferida para Sepang →", "sem substituta"; na
+ * substituta, "Substitui Sakhir e Jeddah (canceladas)" / "Transferida de Sakhir, onde foi cancelada". Cada etapa
+ * citada e um link para a pagina dela (id do catalogo; a pagina resolve para o id ao vivo).
+ */
+@Composable
+private fun ChangeNote(change: RaceChange, cancelled: Boolean, onOpenRace: (String) -> Unit) {
+    val portuguese = isPortuguese()
+    val and = stringResource(R.string.common_and)
+    val text = when (change) {
+        is RaceChange.NoReplacement -> AnnotatedString(stringResource(R.string.change_no_replacement))
+        is RaceChange.ReplacedBy -> {
+            val template = stringResource(if (change.relocated) R.string.change_moved_to else R.string.change_replaced_by, MARK)
+            linkedNames(template, change.races, change.relocated, portuguese, and, onOpenRace, arrow = true)
         }
+        is RaceChange.Replaces -> {
+            val res = when {
+                change.relocated -> R.string.change_moved_from
+                change.races.size > 1 -> R.string.change_replaces_many
+                else -> R.string.change_replaces
+            }
+            linkedNames(stringResource(res, MARK), change.races, change.relocated, portuguese, and, onOpenRace, arrow = false)
+        }
+    }
+    // Na etapa cancelada a nota complementa o "Etapa cancelada"; na substituta, so a frase.
+    if (cancelled && change is RaceChange.Replaces) return
+    if (!cancelled && change !is RaceChange.Replaces) return
+    PitCard(Modifier.fillMaxWidth(), containerColor = PitColors.SurfaceLow) {
+        Text(
+            if (cancelled) buildAnnotatedString {
+                withStyle(SpanStyle(fontWeight = FontWeight.Bold, color = Color.White)) { append(stringResource(R.string.race_cancelled)) }
+                append(" · ")
+                append(text)
+            } else text,
+            Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+            style = PitText.BodyMd,
+            color = PitColors.Silver,
+        )
+    }
+}
+
+/** O template com cada etapa citada virando link; "A e B", "A, B e C". */
+private fun linkedNames(
+    template: String,
+    races: List<Race>,
+    relocated: Boolean,
+    portuguese: Boolean,
+    and: String,
+    onOpenRace: (String) -> Unit,
+    arrow: Boolean,
+): AnnotatedString {
+    val parts = template.split(MARK)
+    val linkStyle = TextLinkStyles(SpanStyle(color = Color.White, fontWeight = FontWeight.SemiBold, textDecoration = TextDecoration.Underline))
+    return buildAnnotatedString {
+        append(parts.first())
+        races.forEachIndexed { index, race ->
+            append(if (index == 0) "" else if (index == races.lastIndex) " $and " else ", ")
+            // Etapa transferida mantem o nome do evento: o que muda e o lugar, entao o link mostra o lugar.
+            val label = if (relocated) race.displayLocation(portuguese).ifBlank { race.circuit } else race.displayName(portuguese)
+            withLink(LinkAnnotation.Clickable(race.id, linkStyle) { onOpenRace(race.id) }) { append(label) }
+        }
+        append(parts.getOrElse(1) { "" })
+        if (arrow) append(" →")
     }
 }
 
@@ -325,7 +432,7 @@ private fun InfoRow(label: String, value: String) {
 // --- programacao -------------------------------------------------------------------------------
 
 @Composable
-private fun SessionsSection(sessions: List<SessionSlot>, now: Instant) {
+private fun SessionsSection(sessions: List<SessionSlot>, now: Instant, cancelled: Boolean) {
     val locale = currentLocale()
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         SectionHeader(stringResource(R.string.race_schedule))
@@ -333,7 +440,8 @@ private fun SessionsSection(sessions: List<SessionSlot>, now: Instant) {
             Column {
                 sessions.forEachIndexed { index, slot ->
                     if (index > 0) HorizontalDivider(color = PitColors.HairlineSoft)
-                    val past = runCatching { Instant.parse(slot.startsAt).isBefore(now) }.getOrDefault(false)
+                    // Sessao de etapa cancelada nao vai acontecer: aparece apagada.
+                    val past = cancelled || runCatching { Instant.parse(slot.startsAt).isBefore(now) }.getOrDefault(false)
                     val isRace = slot.kind == SessionKind.RACE
                     Row(
                         Modifier.fillMaxWidth().alpha(if (past) 0.5f else 1f).padding(horizontal = 16.dp, vertical = 14.dp),
