@@ -1333,7 +1333,12 @@
  {
   "categoryId": "imsa",
   "raceId": "sebring",
-  "info": null
+  "info": {
+   "trackImage": "/circuits/sebring.png",
+   "osm": true,
+   "lengthKm": 6.019,
+   "corners": 17
+  }
  },
  {
   "categoryId": "imsa",
@@ -1581,12 +1586,23 @@
  {
   "categoryId": "indy",
   "raceId": "markham",
-  "info": null
+  "info": {
+   "trackImage": "/circuits/markham.png",
+   "osm": true,
+   "lengthKm": 3.52,
+   "corners": 12
+  }
  },
  {
   "categoryId": "indy",
   "raceId": "washington",
-  "info": null
+  "info": {
+   "trackImage": "/circuits/washington-dc.png",
+   "osm": true,
+   "lengthKm": 2.736,
+   "corners": 7,
+   "direction": "counterclockwise"
+  }
  },
  {
   "categoryId": "indy",
@@ -1637,7 +1653,11 @@
  {
   "categoryId": "nascar",
   "raceId": "atlanta1",
-  "info": null
+  "info": {
+   "trackImage": "/circuits/atlanta.png",
+   "osm": true,
+   "lengthKm": 2.478
+  }
  },
  {
   "categoryId": "nascar",
@@ -1714,7 +1734,11 @@
  {
   "categoryId": "nascar",
   "raceId": "charlotte600",
-  "info": null
+  "info": {
+   "trackImage": "/circuits/charlotte-oval.png",
+   "osm": true,
+   "lengthKm": 2.414
+  }
  },
  {
   "categoryId": "nascar",
@@ -1756,12 +1780,20 @@
  {
   "categoryId": "nascar",
   "raceId": "chicagoland",
-  "info": null
+  "info": {
+   "trackImage": "/circuits/chicagoland.png",
+   "osm": true,
+   "lengthKm": 2.414
+  }
  },
  {
   "categoryId": "nascar",
   "raceId": "atlanta2",
-  "info": null
+  "info": {
+   "trackImage": "/circuits/atlanta.png",
+   "osm": true,
+   "lengthKm": 2.478
+  }
  },
  {
   "categoryId": "nascar",
@@ -1794,7 +1826,11 @@
  {
   "categoryId": "nascar",
   "raceId": "newhampshire",
-  "info": null
+  "info": {
+   "trackImage": "/circuits/new-hampshire.png",
+   "osm": true,
+   "lengthKm": 1.703
+  }
  },
  {
   "categoryId": "nascar",
@@ -1833,7 +1869,11 @@
  {
   "categoryId": "nascar",
   "raceId": "charlotte-roval",
-  "info": null
+  "info": {
+   "trackImage": "/circuits/charlotte-oval.png",
+   "osm": true,
+   "lengthKm": 2.414
+  }
  },
  {
   "categoryId": "nascar",
