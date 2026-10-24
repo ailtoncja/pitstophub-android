@@ -86,6 +86,7 @@ class CategoryRepository(
             SyncedMerger.isSynced(base.id) -> loadSynced(base)
             base.id in LiveSeriesMapper.gtwcSeriesByCategory -> loadGtwc(base, now)
             base.id == LiveSeriesMapper.ENDURANCE_BRASIL -> loadEnduranceBrasil(base)
+            base.id in LiveSeriesMapper.brasilCategories -> loadBrasil(base)
             else -> toData(base, live = false, liveStandings = false, offline = false)
         }
     } catch (e: CancellationException) {
@@ -215,6 +216,31 @@ class CategoryRepository(
             live = racesResult.getOrNull().orEmpty().isNotEmpty(),
             liveStandings = liveStandings != null,
             offline = racesResult.isFailure && teamsResult.isFailure,
+        )
+    }
+
+    // --- NASCAR Brasil e Porsche Cup Brasil (api-motorsports) -----------------------------------
+
+    private suspend fun loadBrasil(base: Category): CategoryData = coroutineScope {
+        val races = async { attempt { motorsports.brasilRaces(base.id) } }
+        val drivers = async { attempt { motorsports.brasilDrivers(base.id) } }
+        val standings = async { attempt { motorsports.brasilStandings(base.id) } }
+
+        var merged = base
+        val racesResult = races.await()
+        val driversResult = drivers.await()
+        val standingsResult = standings.await()
+
+        racesResult.getOrNull()?.takeIf { it.isNotEmpty() }?.let { merged = merged.copy(calendar = LiveSeriesMapper.brasilRaces(it)) }
+        driversResult.getOrNull()?.takeIf { it.isNotEmpty() }?.let { merged = merged.copy(drivers = LiveSeriesMapper.brasilDrivers(it)) }
+        val liveStandings = standingsResult.getOrNull()?.let(LiveSeriesMapper::brasilStandings)
+        if (liveStandings != null) merged = merged.copy(standings = liveStandings)
+
+        toData(
+            merged,
+            live = racesResult.getOrNull().orEmpty().isNotEmpty(),
+            liveStandings = liveStandings != null,
+            offline = racesResult.isFailure && standingsResult.isFailure,
         )
     }
 

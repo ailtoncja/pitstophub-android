@@ -34,6 +34,8 @@ object CategoryVisuals {
         "gtwc-america" to Icons.Filled.DirectionsCar,
         "gtwc-asia" to Icons.Filled.DirectionsCar,
         "endurance-brasil" to Icons.Filled.Shield,
+        "nascar-brasil" to Icons.Filled.DirectionsCar,
+        "porsche-cup" to Icons.Filled.DirectionsCar,
         "wrc" to Icons.Filled.Terrain,
     )
 
@@ -53,6 +55,8 @@ object CategoryVisuals {
         "gtwc-america" to Color(0xFFF39C12),
         "gtwc-asia" to Color(0xFF9B59B6),
         "endurance-brasil" to Color(0xFF009B3A),
+        "nascar-brasil" to Color(0xFF2F7FD1),
+        "porsche-cup" to Color(0xFFC9A227),
     )
 
     private val cars: Map<String, Int> = mapOf(
@@ -70,6 +74,8 @@ object CategoryVisuals {
         "gtwc-america" to R.drawable.car_gt3,
         "gtwc-asia" to R.drawable.car_gt3,
         "endurance-brasil" to R.drawable.car_gt3,
+        "nascar-brasil" to R.drawable.car_nascar,
+        "porsche-cup" to R.drawable.car_gt3,
     )
 
     private val states: Map<String, DataState> = mapOf(
@@ -82,6 +88,9 @@ object CategoryVisuals {
         "f3" to DataState.DAILY,
         "dtm" to DataState.DAILY,
         "wrc" to DataState.DAILY,
+        // Raspadas das fontes oficiais pelo motor do Supabase e publicadas pela api-motorsports.
+        "nascar-brasil" to DataState.DAILY,
+        "porsche-cup" to DataState.DAILY,
     )
 
     fun icon(categoryId: String): ImageVector = icons[categoryId] ?: Icons.Filled.Speed
