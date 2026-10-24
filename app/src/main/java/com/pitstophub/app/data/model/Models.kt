@@ -60,6 +60,17 @@ data class Race(
     /** Coordenadas do circuito: so a fonte ao vivo (Jolpica) informa. Servem para a previsao do tempo. */
     val lat: Double? = null,
     val lng: Double? = null,
+    /** Pais da etapa (Jolpica): o lugar decide o circuito antes do nome do evento (GP do Bahrein em Sepang). */
+    val country: String? = null,
+    // Cancelamentos e substituicoes (so no catalogo; ids da mesma categoria). Ver domain/RaceChanges.kt.
+    /** Etapa cancelada: etapas que entraram no lugar dela. Lista vazia = confirmado que nao houve substituta. */
+    val replacedBy: List<String>? = null,
+    /** Etapa que entrou no lugar das etapas canceladas listadas. */
+    val replaces: List<String>? = null,
+    /** O mesmo evento foi transferido para outro circuito (vale nos dois lados do par). */
+    val relocated: Boolean = false,
+    /** Fonte oficial do cancelamento/substituicao. */
+    val changeSource: String? = null,
 ) {
     /** "Rodada 33" nao diz nada como titulo: em portugues, cai no nome em ingles quando ele existe. */
     fun displayName(portuguese: Boolean): String = when {
@@ -150,4 +161,9 @@ data class CategoryData(
     val liveStandings: Boolean,
     /** Uma busca ao vivo falhou e o app caiu no catalogo estatico. */
     val offline: Boolean,
+    /**
+     * Calendario do catalogo estatico: as fontes ao vivo trocam os ids e nao listam as etapas canceladas, entao os
+     * links do catalogo, as canceladas e os pares "cancelada <-> substituta" saem daqui.
+     */
+    val catalogCalendar: List<Race> = emptyList(),
 )

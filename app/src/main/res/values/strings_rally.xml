@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Ficha do rali (WRC), textos do site (src/lib/dictionary.ts, "rally.*") -->
+    <string name="rally_title">Rally map</string>
+    <string name="rally_title_no_map">Rally sheet</string>
+    <string name="rally_all_days">All</string>
+    <string name="rally_stages">Special stages</string>
+    <string name="rally_competitive_km">Competitive km</string>
+    <string name="rally_longest">Longest stage</string>
+    <string name="rally_power_stage">Power Stage</string>
+    <string name="rally_service">Service park</string>
+    <string name="rally_service_short">Service</string>
+    <string name="rally_not_published">Not published</string>
+    <string name="rally_surface_label">Surface</string>
+    <string name="rally_surface_gravel">Gravel</string>
+    <string name="rally_surface_tarmac">Tarmac</string>
+    <string name="rally_surface_snow">Snow</string>
+    <string name="rally_surface_mixed">Mixed</string>
+    <string name="rally_start">Start</string>
+    <string name="rally_finish">Finish</string>
+    <string name="rally_map_alt">Map of the special stages and the service park</string>
+    <string name="rally_route_note">Official stage routes, published by the organiser.</string>
+    <string name="rally_points_note">Start and finish of each stage only; the route itself is not drawn.</string>
+    <string name="rally_no_map">Map unavailable</string>
+    <string name="rally_no_map_hint">The organiser has not published the stage locations in a source we can verify.</string>
+    <string name="rally_itinerary">Day-by-day itinerary</string>
+    <string name="rally_local_time">Local time (%1$s)</string>
+    <plurals name="rally_day_totals">
+        <item quantity="one">%1$d stage · %2$s</item>
+        <item quantity="other">%1$d stages · %2$s</item>
+    </plurals>
+    <string name="rally_day_no_stages">No stages</string>
+    <string name="rally_shakedown">Shakedown, not scored</string>
+    <string name="rally_itinerary_note">The organiser\'s official itinerary (%1$s), as planned; stages cancelled during the event are not reflected here.</string>
+    <string name="rally_itinerary_note_no_version">The organiser\'s official itinerary, as planned; stages cancelled during the event are not reflected here.</string>
+    <string name="rally_itinerary_secondary">Itinerary from a secondary source (the official document is not accessible); stages cancelled during the event are not reflected here.</string>
+    <string name="rally_no_times">The source does not list stage times.</string>
+    <string name="rally_sources">Data sources</string>
+    <string name="rally_secondary">secondary source</string>
+    <string name="rally_osm_source">Coastline, service park and towns: © OpenStreetMap contributors (ODbL)</string>
+</resources>

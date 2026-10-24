@@ -57,29 +57,81 @@ data class BrakingZone(val turn: String, val name: String, val pt: String, val e
     fun text(portuguese: Boolean): String = if (portuguese) pt else en
 }
 
+/**
+ * Ficha do circuito de uma etapa (`CircuitInfo` de src/circuit-info.ts). Tudo e opcional: so existe o que tem fonte.
+ * Voltas, distancia, recorde, primeiro GP, Straight Mode, frenagens e pneus sao dados do GP de F1 e so aparecem na F1.
+ */
 @Serializable
 data class CircuitInfo(
     val trackImage: String? = null,
-    val lengthKm: Double,
-    val raceDistanceKm: Double,
-    val laps: Int,
-    val corners: Int,
+    /** Desenho feito a partir do OpenStreetMap: exige o credito "© OpenStreetMap" onde aparece (ODbL). */
+    val osm: Boolean = false,
+    val lengthKm: Double? = null,
+    val raceDistanceKm: Double? = null,
+    val laps: Int? = null,
+    val corners: Int? = null,
     /** "clockwise" ou "counterclockwise". */
-    val direction: String,
+    val direction: String? = null,
     val lapRecord: LapRecord? = null,
-    val firstGrandPrix: Int,
-    val drsZones: List<LocalizedText> = emptyList(),
+    val firstGrandPrix: Int? = null,
+    /** Zonas de Straight Mode (aero ativa) no mapa oficial da F1 de 2026; o DRS deixou de existir. */
+    val straightModeZones: Int? = null,
     val brakingZones: List<BrakingZone> = emptyList(),
-    val tyreStrategyNote: LocalizedText,
+    val tyreStrategyNote: LocalizedText? = null,
 ) {
-    val clockwise: Boolean get() = direction == "clockwise"
+    val clockwise: Boolean? get() = direction?.let { it == "clockwise" }
 }
 
-/** Um circuito do catalogo: palavras que o identificam no texto da corrida e a ficha tecnica. */
+// --- regras de escolha do circuito (circuits.json, exportado de src/circuit-info.ts) ---------------------
+
+/** Termos que identificam um lugar no texto da etapa (sem acento, minusculos): texto puro ou regex. */
 @Serializable
-data class CircuitEntry(
+data class TermOption(val terms: List<String> = emptyList(), val patterns: List<String> = emptyList(), val layout: String)
+
+@Serializable
+data class LayoutEvent(val categoryId: String, val date: String, val layout: String)
+
+/** Um lugar com desenho do OpenStreetMap; pode ter mais de um tracado (oval x misto). */
+@Serializable
+data class Venue(
+    val terms: List<String> = emptyList(),
+    val patterns: List<String> = emptyList(),
+    val not: List<String> = emptyList(),
+    /** So nestas categorias (null = todas). */
+    val categories: List<String>? = null,
+    val layout: String,
+    val byCategory: Map<String, String> = emptyMap(),
+    val byText: List<TermOption> = emptyList(),
+    val byEvent: List<LayoutEvent> = emptyList(),
+)
+
+@Serializable
+data class DrawnCircuit(
+    val name: String,
+    val layout: String,
+    val trackImage: String,
+    val lengthKm: Double? = null,
+    val corners: Int? = null,
+    val direction: String? = null,
+)
+
+/** Ficha de GP (pistas da F1 2026, Sakhir, Imola, Jeddah) e as palavras que a escolhem. */
+@Serializable
+data class GpCircuit(
     val id: String,
-    val keywords: List<String>,
-    val exclude: List<String> = emptyList(),
+    val terms: List<String> = emptyList(),
+    val patterns: List<String> = emptyList(),
+    val not: List<String> = emptyList(),
+    /** Fichas que, se casarem, descartam esta (Sepang antes de Sakhir). */
+    val unless: List<String> = emptyList(),
+    /** O pais da etapa (Jolpica) entra no texto. */
+    val withCountry: Boolean = false,
     val info: CircuitInfo,
+)
+
+@Serializable
+data class CircuitsFile(
+    val venues: List<Venue> = emptyList(),
+    val drawings: Map<String, DrawnCircuit> = emptyMap(),
+    val gp: List<GpCircuit> = emptyList(),
 )

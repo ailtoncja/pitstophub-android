@@ -18,14 +18,21 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.material3.Text
+import androidx.compose.runtime.remember
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import coil3.compose.AsyncImage
+import com.pitstophub.app.data.model.CircuitInfo
 import com.pitstophub.app.data.model.Race
 import com.pitstophub.app.ui.CategoryVisuals
 import com.pitstophub.app.ui.CircuitArt
+import com.pitstophub.app.ui.LocalAppContainer
 import com.pitstophub.app.ui.theme.PitColors
+import com.pitstophub.app.ui.theme.PitText
 
 /**
  * Campo do "Reel": o tom da categoria tinge o fundo; a midia e o mapa do circuito quando existe e, senao, o desenho
@@ -43,7 +50,8 @@ fun HeroBackdrop(
     compactCar: Boolean = false,
 ) {
     val tone = hue ?: CategoryVisuals.accent(categoryId)
-    val track = if (bare) null else race?.let { CircuitArt.forRace(categoryId, it) }
+    val circuit = if (bare) null else rememberCircuit(categoryId, race)
+    val track = CircuitArt.assetFor(circuit?.trackImage)
     Box(modifier.fillMaxSize().background(PitColors.Carbon)) {
         Box(
             Modifier.fillMaxSize().drawBehind {
@@ -59,12 +67,23 @@ fun HeroBackdrop(
             },
         )
         when {
-            track != null -> Image(
-                painter = painterResource(track),
-                contentDescription = null,
-                modifier = Modifier.align(Alignment.TopCenter).fillMaxWidth().height(artHeight).padding(horizontal = 24.dp, vertical = 18.dp),
-                contentScale = ContentScale.Fit,
-            )
+            track != null -> Box(Modifier.align(Alignment.TopCenter).fillMaxWidth().height(artHeight)) {
+                AsyncImage(
+                    model = track,
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp, vertical = 18.dp),
+                    contentScale = ContentScale.Fit,
+                )
+                // Desenho feito a partir do OpenStreetMap: o credito (ODbL) acompanha o desenho.
+                if (circuit?.osm == true) {
+                    Text(
+                        "© OpenStreetMap",
+                        Modifier.align(Alignment.BottomEnd).padding(end = 20.dp, bottom = 2.dp),
+                        style = PitText.DataLabelXs.copy(fontSize = 9.sp),
+                        color = Color.White.copy(alpha = 0.6f),
+                    )
+                }
+            }
             !bare -> Image(
                 painter = painterResource(CategoryVisuals.car(categoryId)),
                 contentDescription = null,
@@ -86,5 +105,13 @@ fun HeroBackdrop(
     }
 }
 
+/** Ficha do circuito da etapa nesta categoria (o tracado certo do lugar; nada no WRC). */
+@Composable
+fun rememberCircuit(categoryId: String, race: Race?): CircuitInfo? {
+    val webData = LocalAppContainer.current.webData
+    return remember(categoryId, race) { race?.let { webData.circuitFor(categoryId, it) } }
+}
+
 /** Ha mapa da pista para esta corrida? (o reel avisa quando nao ha). */
-fun hasTrackArt(categoryId: String, race: Race?): Boolean = race?.let { CircuitArt.forRace(categoryId, it) } != null
+@Composable
+fun hasTrackArt(categoryId: String, race: Race?): Boolean = rememberCircuit(categoryId, race)?.trackImage != null
