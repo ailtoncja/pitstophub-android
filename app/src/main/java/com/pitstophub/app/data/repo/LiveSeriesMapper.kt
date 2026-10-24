@@ -8,6 +8,10 @@ import com.pitstophub.app.data.model.RaceStatus
 import com.pitstophub.app.data.model.StandingItem
 import com.pitstophub.app.data.model.StandingsClassGroup
 import com.pitstophub.app.data.model.Team
+import com.pitstophub.app.data.remote.ApiBrasilDriver
+import com.pitstophub.app.data.remote.ApiBrasilRace
+import com.pitstophub.app.data.remote.ApiBrasilStandings
+import com.pitstophub.app.data.remote.ApiBrasilStandingsClass
 import com.pitstophub.app.data.remote.ApiEbDriver
 import com.pitstophub.app.data.remote.ApiEbTeam
 import com.pitstophub.app.data.remote.ApiGtwcTeam
@@ -25,6 +29,7 @@ object LiveSeriesMapper {
         "gtwc-asia" to "asia",
     )
     const val ENDURANCE_BRASIL = "endurance-brasil"
+    val brasilCategories = listOf("nascar-brasil", "porsche-cup")
 
     // --- GT World Challenge --------------------------------------------------------------------
 
@@ -127,6 +132,50 @@ object LiveSeriesMapper {
             else -> "#2ECC71"
         }
     }
+
+    // --- NASCAR Brasil e Porsche Cup Brasil ----------------------------------------------------
+
+    fun brasilRaces(api: List<ApiBrasilRace>): List<Race> = api.map { race ->
+        Race(
+            id = race.raceId,
+            name = race.name,
+            enName = race.name,
+            location = race.location.orEmpty(),
+            enLocation = race.location,
+            circuit = race.circuit ?: race.location.orEmpty(),
+            date = race.date,
+            startsAt = race.startsAt,
+            status = when (race.status) {
+                "completed" -> RaceStatus.COMPLETED
+                "cancelled" -> RaceStatus.CANCELLED
+                else -> RaceStatus.UPCOMING
+            },
+            winner = race.winner,
+            round = race.round,
+        )
+    }
+
+    /** Nenhuma das duas fontes oficiais publica a equipe de cada piloto, entao o grid vem sem equipe. */
+    fun brasilDrivers(api: List<ApiBrasilDriver>): List<Driver> = api.map { driver ->
+        Driver(id = driver.driverId, name = driver.name, number = driver.number.orEmpty(), nationality = "Brasil")
+    }
+
+    /**
+     * Uma divisao so (NASCAR Brasil) vira a lista normal de pilotos. A Porsche Cup disputa Sprint e
+     * Endurance em tres divisoes: cada uma fica na sua, porque somar Carrera com Trophy numa lista
+     * unica nao seria o campeonato de ninguem.
+     */
+    fun brasilStandings(api: ApiBrasilStandings): CategoryStandings? {
+        val classes: List<ApiBrasilStandingsClass> = api.drivers.orEmpty().filter { it.entries.isNotEmpty() }
+        if (classes.isEmpty()) return null
+        if (classes.size == 1) return CategoryStandings(drivers = brasilItems(classes[0]))
+        return CategoryStandings(
+            driverClasses = classes.map { StandingsClassGroup(it.classLabel, brasilItems(it)) },
+        )
+    }
+
+    private fun brasilItems(group: ApiBrasilStandingsClass): List<StandingItem> =
+        group.entries.map { StandingItem(it.position, it.name, it.points, it.team) }
 
     // --- Endurance Brasil ----------------------------------------------------------------------
 

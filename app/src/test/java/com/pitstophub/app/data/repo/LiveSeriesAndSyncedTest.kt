@@ -5,6 +5,11 @@ import com.pitstophub.app.data.model.Driver
 import com.pitstophub.app.data.model.Race
 import com.pitstophub.app.data.model.RaceStatus
 import com.pitstophub.app.data.model.Team
+import com.pitstophub.app.data.remote.ApiBrasilDriver
+import com.pitstophub.app.data.remote.ApiBrasilRace
+import com.pitstophub.app.data.remote.ApiBrasilStandingEntry
+import com.pitstophub.app.data.remote.ApiBrasilStandings
+import com.pitstophub.app.data.remote.ApiBrasilStandingsClass
 import com.pitstophub.app.data.remote.ApiEbDriver
 import com.pitstophub.app.data.remote.ApiEbTeam
 import com.pitstophub.app.data.remote.ApiGtwcTeam
@@ -121,6 +126,55 @@ class LiveSeriesAndSyncedTest {
         assertEquals("Round 1 - Four Hours of Brasília", race.enName)
         assertEquals("Brasília", race.enLocation)
         assertEquals(RaceStatus.COMPLETED, race.status)
+    }
+
+    // --- NASCAR Brasil e Porsche Cup Brasil -----------------------------------------------------
+
+    @Test
+    fun `corridas brasileiras usam o status que a API ja resolveu`() {
+        val races = LiveSeriesMapper.brasilRaces(
+            listOf(
+                ApiBrasilRace(raceId = "r01", round = 1, name = "Interlagos", location = "Interlagos", date = "2026-03-01", status = "completed", winner = "Marçal Muller / Jeff Giassi"),
+                ApiBrasilRace(raceId = "r10", round = 10, name = "Interlagos (Endurance)", location = "Interlagos", date = "2026-11-28", status = "upcoming"),
+            ),
+        )
+        assertEquals(RaceStatus.COMPLETED, races[0].status)
+        assertEquals("Marçal Muller / Jeff Giassi", races[0].winner)
+        assertEquals(RaceStatus.UPCOMING, races[1].status)
+        assertEquals(10, races[1].round)
+    }
+
+    @Test
+    fun `uma divisao vira lista de pilotos e varias viram divisoes separadas`() {
+        val single = LiveSeriesMapper.brasilStandings(
+            ApiBrasilStandings(drivers = listOf(ApiBrasilStandingsClass("Geral", listOf(ApiBrasilStandingEntry(1, "Thiago Camilo", points = 226.0))))),
+        )
+        assertEquals("Thiago Camilo", single!!.drivers!!.single().name)
+        assertNull(single.driverClasses)
+
+        val many = LiveSeriesMapper.brasilStandings(
+            ApiBrasilStandings(
+                drivers = listOf(
+                    ApiBrasilStandingsClass("Sprint Carrera", listOf(ApiBrasilStandingEntry(1, "Marçal Muller", points = 180.0))),
+                    ApiBrasilStandingsClass("Sprint Trophy", emptyList()),
+                    ApiBrasilStandingsClass("Endurance Challenge", listOf(ApiBrasilStandingEntry(1, "Fabio Carbone", points = 105.0))),
+                ),
+            ),
+        )
+        assertEquals(listOf("Sprint Carrera", "Endurance Challenge"), many!!.driverClasses!!.map { it.classLabel })
+        assertNull(many.drivers)
+
+        assertNull(LiveSeriesMapper.brasilStandings(ApiBrasilStandings(drivers = null)))
+    }
+
+    @Test
+    fun `o grid brasileiro vem sem equipe, porque a fonte oficial nao publica`() {
+        val drivers = LiveSeriesMapper.brasilDrivers(
+            listOf(ApiBrasilDriver(driverId = "marcal-muller", name = "Marçal Muller", number = "544", classes = listOf("Sprint Carrera"))),
+        )
+        assertEquals("544", drivers.single().number)
+        assertEquals("", drivers.single().teamId)
+        assertEquals("Brasil", drivers.single().nationality)
     }
 
     // --- categorias sincronizadas (Supabase) ----------------------------------------------------

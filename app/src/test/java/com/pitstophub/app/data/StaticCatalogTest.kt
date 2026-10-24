@@ -18,17 +18,19 @@ class StaticCatalogTest {
     }
 
     @Test
-    fun `carrega as 14 categorias do PWA`() {
-        assertEquals(14, catalog.categories.size)
+    fun `carrega as 16 categorias do PWA`() {
+        assertEquals(16, catalog.categories.size)
         val ids = catalog.categories.map { it.id }
         assertTrue(ids.containsAll(listOf("f1", "f2", "f3", "f1-academy", "wec", "imsa", "dtm", "indy", "nascar", "wrc")))
         assertTrue(ids.containsAll(listOf("gtwc-europe", "gtwc-america", "gtwc-asia", "endurance-brasil")))
+        assertTrue(ids.containsAll(listOf("nascar-brasil", "porsche-cup")))
     }
 
     @Test
     fun `categorias sem dados estaticos dependem da API ao vivo`() {
-        // GTWC e Endurance Brasil vem so da api-motorsports: o catalogo nao traz equipes nem corridas.
-        listOf("gtwc-europe", "gtwc-america", "gtwc-asia", "endurance-brasil").forEach { id ->
+        // GTWC, Endurance Brasil, NASCAR Brasil e Porsche Cup vem so da api-motorsports: o catalogo
+        // nao traz equipes nem corridas.
+        listOf("gtwc-europe", "gtwc-america", "gtwc-asia", "endurance-brasil", "nascar-brasil", "porsche-cup").forEach { id ->
             val category = catalog.categories.first { it.id == id }
             assertTrue("$id deveria vir vazio", category.teams.isEmpty() && category.calendar.isEmpty())
         }

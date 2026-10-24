@@ -97,6 +97,7 @@
     <string name="drawer_title">Categories</string>
     <string name="group_formulas">Formulas</string>
     <string name="group_endurance">Endurance / GT</string>
+    <string name="group_brasil">Brazil</string>
     <string name="group_american">American</string>
     <string name="group_rally">Rally</string>
     <string name="profile_title">Profile</string>

@@ -63,6 +63,43 @@ data class ApiStandings(
     val teams: List<ApiStandingsClass>? = null,
 )
 
+// NASCAR Brasil e Porsche Cup Brasil: a api-motorsports publica o que o motor do Supabase ja le das
+// fontes oficiais (CBA e planilha oficial da Porsche Cup). O status vem pronto, e a classificacao
+// pode ter mais de uma divisao (a Porsche Cup tem cinco).
+@Serializable
+data class ApiBrasilRace(
+    val raceId: String,
+    val round: Int? = null,
+    val name: String,
+    val location: String? = null,
+    val circuit: String? = null,
+    val date: String,
+    val startsAt: String? = null,
+    val status: String = "upcoming",
+    val winner: String? = null,
+)
+
+@Serializable
+data class ApiBrasilStandingEntry(val position: Int, val name: String, val team: String? = null, val points: Double)
+
+@Serializable
+data class ApiBrasilStandingsClass(val classLabel: String, val entries: List<ApiBrasilStandingEntry> = emptyList())
+
+@Serializable
+data class ApiBrasilStandings(
+    val season: Int? = null,
+    val asOfRound: Int? = null,
+    val drivers: List<ApiBrasilStandingsClass>? = null,
+)
+
+@Serializable
+data class ApiBrasilDriver(
+    val driverId: String,
+    val name: String,
+    val number: String? = null,
+    val classes: List<String> = emptyList(),
+)
+
 class MotorsportsClient(private val http: HttpFetcher, private val baseUrl: String = BASE_URL) {
 
     suspend fun gtwcRaces(seriesId: String): List<ApiRace> = list("/series/$seriesId/races")
@@ -73,6 +110,10 @@ class MotorsportsClient(private val http: HttpFetcher, private val baseUrl: Stri
     suspend fun ebTeams(): List<ApiEbTeam> = list("/endurance-brasil/teams")
     suspend fun ebDrivers(): List<ApiEbDriver> = list("/endurance-brasil/drivers")
     suspend fun ebStandings(): ApiStandings = one("/endurance-brasil/standings")
+
+    suspend fun brasilRaces(categoryId: String): List<ApiBrasilRace> = list("/$categoryId/races")
+    suspend fun brasilDrivers(categoryId: String): List<ApiBrasilDriver> = list("/$categoryId/drivers")
+    suspend fun brasilStandings(categoryId: String): ApiBrasilStandings = one("/$categoryId/standings")
 
     private suspend inline fun <reified T> list(path: String): List<T> =
         AppJson.decodeFromString<List<T>>(http.getString(baseUrl + path))
