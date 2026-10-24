@@ -161,11 +161,28 @@ class LiveSeriesAndSyncedTest {
 
     @Test
     fun `classificacao sincronizada vira a lista de pilotos`() {
-        val base = Category("dtm", "DTM", "DTM")
-        val merged = SyncedMerger.mergeStandings(base, listOf(SyncedStandingRow(1, "Fulano", "Time", 120.5)))
+        val base = Category("dtm", "DTM", "DTM", calendar = listOf(Race("r", "Corrida", date = "2026-05-01")))
+        val merged = SyncedMerger.mergeStandings(base, listOf(SyncedStandingRow(1, "Fulano", "Time", 120.5, season = 2026)))
         val item = merged.standings!!.drivers!!.single()
         assertEquals("Fulano", item.name)
         assertEquals("Time", item.team)
         assertNotNull(merged.standings)
+    }
+
+    @Test
+    fun `virada nao mistura classificacao etapas ou vencedores antigos`() {
+        val base = Category("wec", "WEC", "WEC", calendar = listOf(
+            Race("spa", "Spa", date = "2026-05-01", winner = "Antigo"),
+            Race("lemans", "Le Mans", date = "2026-06-01"),
+        ))
+        val old = SyncedStandingRow(1, "Piloto", "Time", 100.0, season = 2026)
+        val withPoints = SyncedMerger.mergeStandings(base, listOf(old))
+        val next = SyncedMerger.mergeCalendar(withPoints, listOf(row("spa", "Spa", "2027-05-01", "Novo")))
+        assertNull(next.standings)
+        assertEquals(1, next.calendar.size)
+        assertEquals("Novo", next.calendar.single().winner)
+        assertNull(SyncedMerger.mergeStandings(next, listOf(old)).standings)
+        assertNull(SyncedMerger.mergeStandings(next, listOf(old.copy(season = null))).standings)
+        assertNotNull(SyncedMerger.mergeStandings(next, listOf(old.copy(season = 2027))).standings)
     }
 }

@@ -27,6 +27,7 @@ data class SyncedStandingRow(
     val name: String,
     val team: String? = null,
     val points: Double,
+    val season: Int? = null,
 )
 
 /**
@@ -60,7 +61,7 @@ class SupabaseRestClient(
     }
 
     suspend fun standings(categoryId: String): List<SyncedStandingRow> {
-        val url = "${baseUrl.trimEnd('/')}/rest/v1/synced_standings?select=position,name,team,points" +
+        val url = "${baseUrl.trimEnd('/')}/rest/v1/synced_standings?select=position,name,team,points,season" +
             "&category_id=eq.$categoryId&order=position.asc"
         return AppJson.decodeFromString(ListSerializer(SyncedStandingRow.serializer()), http.getString(url, headers))
     }

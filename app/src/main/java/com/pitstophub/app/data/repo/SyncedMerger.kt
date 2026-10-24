@@ -24,13 +24,22 @@ object SyncedMerger {
         val synced = rows.map { toRace(it) }
             .map { race -> normalizeWinner(preferOfficialWinner(base, race), base) }
         val calendar = dropNonChampionship(base, fillMissingOfficial(base, synced)).map { normalizeWinner(it, base) }
-        return base.copy(calendar = calendar)
+        val years = calendar.map { it.date.take(4) }.toSet()
+        val changedSeason = base.calendar.any { it.date.take(4) !in years }
+        return base.copy(calendar = calendar, standings = if (changedSeason) null else base.standings)
     }
 
     fun mergeStandings(base: Category, rows: List<SyncedStandingRow>): Category {
         if (rows.isEmpty()) return base
-        val items = rows.map { StandingItem(it.position, it.name, it.points, it.team) }
+        val matching = matchingStandings(base, rows)
+        if (matching.isEmpty()) return base.copy(standings = null)
+        val items = matching.map { StandingItem(it.position, it.name, it.points, it.team) }
         return base.copy(standings = (base.standings ?: CategoryStandings()).copy(drivers = items))
+    }
+
+    fun matchingStandings(base: Category, rows: List<SyncedStandingRow>): List<SyncedStandingRow> {
+        val years = base.calendar.mapNotNull { it.date.take(4).toIntOrNull() }.toSet()
+        return rows.filter { it.season != null && years.size == 1 && it.season in years }
     }
 
     private fun toRace(row: SyncedRaceRow): Race = Race(
@@ -64,7 +73,9 @@ object SyncedMerger {
     // inteiro e as duas etapas sumiam da UI.
     private fun fillMissingOfficial(category: Category, synced: List<Race>): List<Race> {
         if (category.id != "wec" && category.id != "imsa") return synced
-        val missing = category.calendar.filter { base -> synced.none { isSameEnduranceRace(base, it) } }
+        val missing = category.calendar.filter { base ->
+            synced.any { it.date.take(4) == base.date.take(4) } && synced.none { isSameEnduranceRace(base, it) }
+        }
         if (missing.isEmpty()) return synced
         return (synced + missing).sortedBy { it.date }
     }
@@ -76,6 +87,7 @@ object SyncedMerger {
     }
 
     private fun isSameEnduranceRace(a: Race, b: Race): Boolean {
+        if (a.date.take(4) != b.date.take(4)) return false
         if (a.date.isNotEmpty() && a.date == b.date) return true
         if (isLeMans(a) && isLeMans(b)) return true
         if (isLongBeach(a) && isLongBeach(b)) return true

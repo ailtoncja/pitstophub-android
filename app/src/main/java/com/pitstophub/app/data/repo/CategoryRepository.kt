@@ -143,7 +143,7 @@ class CategoryRepository(
             toData(
                 merged,
                 live = raceRows.isNotEmpty(),
-                liveStandings = standingRows.isNotEmpty(),
+                liveStandings = SyncedMerger.matchingStandings(merged, standingRows).isNotEmpty(),
                 offline = racesResult.isFailure && standingsResult.isFailure,
             )
         }
