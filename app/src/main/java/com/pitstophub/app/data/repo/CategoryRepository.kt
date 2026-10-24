@@ -65,7 +65,8 @@ class CategoryRepository(
     suspend fun cached(id: String): CategoryData? = mutex.withLock { cache[id]?.data }
 
     /** Catalogo estatico, sem rede: serve para a primeira pintura enquanto o dado ao vivo carrega. */
-    suspend fun staticData(id: String): CategoryData? = catalog.category(id)?.let { toData(it, live = false, liveStandings = false, offline = false) }
+    suspend fun staticData(id: String): CategoryData? =
+        catalog.category(id)?.let { toData(it, live = false, liveStandings = false, offline = false).copy(catalogCalendar = it.calendar) }
 
     suspend fun load(id: String, force: Boolean = false): CategoryData {
         val now = clock()
@@ -73,7 +74,8 @@ class CategoryRepository(
             mutex.withLock { cache[id] }?.takeIf { now.toEpochMilli() - it.loadedAt.toEpochMilli() < ttlMillis }?.let { return it.data }
         }
         val base = catalog.category(id) ?: throw NoSuchElementException("Categoria desconhecida: $id")
-        val data = loadLive(base, now)
+        // O calendario do catalogo acompanha o dado ao vivo: etapas canceladas, ids do catalogo e pares de substituicao.
+        val data = loadLive(base, now).copy(catalogCalendar = base.calendar)
         mutex.withLock { cache[id] = Entry(now, data) }
         return data
     }

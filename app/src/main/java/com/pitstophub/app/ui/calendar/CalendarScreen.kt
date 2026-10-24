@@ -33,8 +33,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.runtime.remember
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
+import com.pitstophub.app.domain.RaceChange
+import com.pitstophub.app.domain.RaceChanges
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.pitstophub.app.R
@@ -81,6 +85,9 @@ fun CalendarScreen(
     val portuguese = isPortuguese()
     val locale = currentLocale()
     val next = category?.calendar?.let { RaceTime.nextRace(it, now) }
+    val catalog = data?.catalogCalendar.orEmpty()
+    val minute = now.epochSecond / 60
+    val sections = remember(category?.calendar, catalog, minute) { RaceChanges.calendarSections(category?.calendar.orEmpty(), catalog, now) }
 
     PullToRefreshBox(isRefreshing = state.refreshing, onRefresh = onRefresh, modifier = modifier.fillMaxSize()) {
         LazyColumn(
@@ -104,19 +111,23 @@ fun CalendarScreen(
                     Text(stringResource(R.string.calendar_empty), style = PitText.BodyMd, color = PitColors.OnSurfaceVariant)
                 }
             }
-            // as que faltam primeiro (em ordem), depois as ja disputadas (a mais recente antes), como no site
-            val ordered = calendar.filter { it.status != RaceStatus.COMPLETED } + calendar.filter { it.status == RaceStatus.COMPLETED }.reversed()
+            // As que faltam primeiro (em ordem), depois as ja disputadas (a mais recente antes), como no site. As etapas
+            // canceladas do catalogo (que a fonte ao vivo nao lista) entram riscadas na posicao da data, mas ficam fora
+            // da contagem, da numeracao e da proxima etapa.
+            val ordered = sections.toCome + sections.played
             itemsIndexed(ordered, key = { _, race -> race.id }) { _, race ->
-                val index = calendar.indexOf(race)
+                if (race.status == RaceStatus.CANCELLED) {
+                    CancelledCard(race, RaceChanges.raceChange(catalog, race), portuguese, locale) { onOpenRace(race) }
+                    return@itemsIndexed
+                }
                 val kind = when {
-                    race.status == RaceStatus.CANCELLED -> RaceKind.CANCELLED
                     race.status == RaceStatus.COMPLETED -> RaceKind.PAST
                     race.id == next?.id -> RaceKind.NEXT
                     else -> RaceKind.FUTURE
                 }
                 RaceCard(
                     race = race,
-                    round = race.round ?: (index + 1),
+                    round = RaceChanges.roundNumber(calendar, race),
                     kind = kind,
                     phase = if (kind == RaceKind.NEXT) RaceTime.phase(race, now) else null,
                     category = category!!,
@@ -176,6 +187,58 @@ private fun NextRacePanel(category: Category, next: Race, now: Instant, portugue
 }
 
 // --- linha de corrida ------------------------------------------------------------------------------
+
+/**
+ * Etapa cancelada: apagada e riscada, sem numero de rodada nem horario, com a substituta (ou "sem substituta") na
+ * linha de baixo. A linha toda leva a pagina da etapa, que tem o link para a substituta.
+ */
+@Composable
+private fun CancelledCard(race: Race, change: RaceChange?, portuguese: Boolean, locale: java.util.Locale, onClick: () -> Unit) {
+    val date = RaceTime.startInstant(race).atZone(java.time.ZoneId.systemDefault())
+    val and = stringResource(R.string.common_and)
+    val note = when (change) {
+        is RaceChange.NoReplacement -> stringResource(R.string.change_no_replacement)
+        is RaceChange.ReplacedBy -> {
+            val names = RaceChanges.joinNames(
+                change.races.map { if (change.relocated) it.displayLocation(portuguese).ifBlank { it.circuit } else it.displayName(portuguese) },
+                and,
+            )
+            stringResource(if (change.relocated) R.string.change_moved_to else R.string.change_replaced_by, names)
+        }
+        else -> null
+    }
+    Row(
+        Modifier.fillMaxWidth().clip(PitShapes.Card)
+            .background(PitColors.Asphalt)
+            .border(1.dp, PitColors.Hairline, PitShapes.Card)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(14.dp),
+    ) {
+        Column(Modifier.width(44.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            Text("%02d".format(date.dayOfMonth), style = PitText.HeadlineMd, color = PitColors.SilverDim)
+            Text(date.month.getDisplayName(java.time.format.TextStyle.SHORT, locale).trimEnd('.'), style = PitText.DataLabelXs, color = PitColors.SilverDim)
+        }
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(
+                race.displayName(portuguese),
+                style = PitText.TitleSm.copy(textDecoration = TextDecoration.LineThrough),
+                color = PitColors.Silver,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+            race.circuit.ifBlank { race.displayLocation(portuguese) }.takeIf { it.isNotBlank() }?.let {
+                Text(it, style = PitText.BodySm, color = PitColors.SilverDim, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
+            Text(
+                listOfNotNull(stringResource(R.string.race_cancelled), note).joinToString(" · "),
+                style = PitText.BodySm,
+                color = PitColors.Silver,
+            )
+        }
+    }
+}
 
 @Composable
 private fun RaceCard(
