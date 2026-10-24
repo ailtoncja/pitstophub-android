@@ -19,6 +19,7 @@ import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -33,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import com.pitstophub.app.BuildConfig
 import com.pitstophub.app.R
 import com.pitstophub.app.i18n.LanguageChoice
+import com.pitstophub.app.ui.AppViewModel
 import com.pitstophub.app.ui.components.PitOutlineButton
 import com.pitstophub.app.ui.components.PitPrimaryButton
 import com.pitstophub.app.ui.components.PitSegmented
@@ -50,11 +52,13 @@ fun ProfileSheet(
     onOpenAlerts: () -> Unit,
     onOpenChampions: () -> Unit,
     onOpenCategories: () -> Unit,
+    appViewModel: AppViewModel,
 ) {
     val account = LocalAccount.current
     val session by account.session.collectAsStateWithLifecycle()
     val settings by account.settings.collectAsStateWithLifecycle()
     val language by account.languageChoice.collectAsStateWithLifecycle()
+    val checking by appViewModel.checkingUpdate.collectAsStateWithLifecycle()
 
     PitSheet(title = stringResource(R.string.profile_title), onDismiss = onDismiss, expanded = true) {
         Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
@@ -115,6 +119,15 @@ fun ProfileSheet(
                 MenuRow(Icons.Filled.Notifications, stringResource(R.string.profile_alerts), stringResource(R.string.profile_alerts_hint), onClick = onOpenAlerts)
                 MenuRow(Icons.Filled.EmojiEvents, stringResource(R.string.profile_champions), stringResource(R.string.profile_champions_hint), onClick = onOpenChampions)
                 MenuRow(Icons.Filled.Explore, stringResource(R.string.profile_categories), stringResource(R.string.profile_categories_hint), onClick = onOpenCategories)
+                MenuRow(
+                    Icons.Filled.Refresh,
+                    stringResource(R.string.profile_update),
+                    stringResource(
+                        if (checking) R.string.profile_update_checking else R.string.profile_update_hint,
+                        BuildConfig.VERSION_NAME,
+                    ),
+                    onClick = { if (!checking) { appViewModel.checkForUpdates(); onDismiss() } },
+                )
             }
 
             if (session != null) {

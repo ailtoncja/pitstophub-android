@@ -158,6 +158,49 @@ class AppUpdaterTest {
         assertNull(updater(http = FakeHttp { 200 to "<html>" }).checkIfDue())
     }
 
+    // --- conferir na hora (botao "Procurar atualizacao") -------------------------------------------
+
+    @Test
+    fun `procurar agora ignora o intervalo de 6 horas e um agora nao anterior`() = runTest {
+        val http = FakeHttp { 200 to releaseJson(digest = "sha256:$apkSha", body = "notas") }
+        val store = MemoryStore()
+        val clock = 1_000_000_000L
+        val updater = updater(http = http, store = store, now = { clock })
+
+        assertNotNull(updater.checkIfDue())
+        updater.dismiss()
+        // Sem o botao, ficaria calado ate as 6 horas passarem.
+        assertNull(updater.checkIfDue())
+
+        val found = updater.checkNow()
+        assertEquals("1.3.2", (found as ManualCheck.Available).release.version)
+        assertEquals(2, http.requests.size)
+    }
+
+    @Test
+    fun `procurar agora avisa quando ja esta na versao mais nova`() = runTest {
+        assertEquals(ManualCheck.UpToDate, updater(installed = "1.3.2").checkNow())
+    }
+
+    @Test
+    fun `procurar agora avisa quando nao deu para conferir`() = runTest {
+        assertEquals(ManualCheck.Failed, updater(http = FakeHttp { throw IOException("sem rede") }).checkNow())
+        assertEquals(ManualCheck.Failed, updater(http = FakeHttp { 403 to """{"message":"API rate limit exceeded"}""" }).checkNow())
+        // 200 que nao e a resposta da API (portal de wi-fi): nao da para dizer que esta em dia.
+        assertEquals(ManualCheck.Failed, updater(http = FakeHttp { 200 to "<html>" }).checkNow())
+    }
+
+    @Test
+    fun `falha ao procurar agora nao apaga a versao que ja se sabia`() = runTest {
+        val store = MemoryStore()
+        val clock = 1_000_000_000L
+        assertNotNull(updater(store = store, now = { clock }).checkIfDue())
+
+        val offline = updater(store = store, http = FakeHttp { throw IOException("sem rede") }, now = { clock })
+        assertEquals(ManualCheck.Failed, offline.checkNow())
+        assertEquals("1.3.2", offline.checkIfDue()?.version)
+    }
+
     // --- baixar e conferir -------------------------------------------------------------------------
 
     @Test

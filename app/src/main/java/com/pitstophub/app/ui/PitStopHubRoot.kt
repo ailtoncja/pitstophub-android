@@ -13,6 +13,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -23,6 +24,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalResources
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
@@ -102,6 +106,16 @@ fun PitStopHubRoot(container: AppContainer, appViewModel: AppViewModel) {
     val deepLink by appViewModel.deepLink.collectAsStateWithLifecycle()
     val allData by appViewModel.all.collectAsStateWithLifecycle()
     val update by appViewModel.update.collectAsStateWithLifecycle()
+
+    // Voltar do segundo plano conta como abrir o app: confere se saiu versao nova desde a ultima vez.
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner, appViewModel) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_START) appViewModel.onForeground()
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
 
     val destination = navController.currentBackStackEntryAsState().value?.destination
     val isTopLevel = destination == null || destination.hasRoute<HomeRoute>() || destination.hasRoute<AgendaRoute>() || destination.hasRoute<CategoriesRoute>()
@@ -395,6 +409,7 @@ fun PitStopHubRoot(container: AppContainer, appViewModel: AppViewModel) {
                         sheet = null
                         openTab(TopLevelTab.Categories)
                     },
+                    appViewModel = appViewModel,
                 )
                 Sheet.ALERTS -> AlertsSheet(
                     onDismiss = { sheet = null },
@@ -419,7 +434,8 @@ fun PitStopHubRoot(container: AppContainer, appViewModel: AppViewModel) {
 
             TributeOverlay(tributes)
 
-            // Versao nova nos GitHub Releases (conferida no inicio, no maximo a cada 6 horas).
+            // Versao nova nos GitHub Releases: conferida no inicio, ao voltar do segundo plano e no
+            // botao "Procurar atualizacao" (que ignora o intervalo de 6 horas).
             UpdateDialog(state = update, snackbar = snackbar, appViewModel = appViewModel)
         }
     }
