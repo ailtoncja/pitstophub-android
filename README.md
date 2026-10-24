@@ -134,7 +134,7 @@ O emulador precisa do recurso **Plataforma do Hipervisor do Windows** (WHPX). Co
 
 ### Problema conhecido: "Unable to establish loopback connection"
 
-Observado ao rodar o Gradle pelo shell do Claude Code nesta máquina: o JDK 25 (o JBR do Android Studio) falha em
+Observado ao rodar o Gradle pelo terminal nesta máquina: o JDK 25 (o JBR do Android Studio) falha em
 `Selector.open()` ("Invalid argument: connect") quando o diretório temporário fica dentro de `AppData` (o padrão
 do Windows). Com o tmpdir em `Documents` ou na raiz do usuário funciona. Não ocorreu no Android Studio aberto
 normalmente. Se o Gradle Sync mostrar esse erro, aponte o tmpdir para fora de `AppData`:
