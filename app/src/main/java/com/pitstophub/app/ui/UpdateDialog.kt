@@ -44,6 +44,17 @@ fun UpdateDialog(state: UpdateState, snackbar: SnackbarHostState, appViewModel: 
         if (ApkInstaller.install(context, ready.apk)) appViewModel.updateHandedOff() else appViewModel.dismissUpdate()
     }
 
+    // Resposta do botao "Procurar atualizacao" quando nao ha versao nova (ou a rede falhou).
+    LaunchedEffect(appViewModel) {
+        appViewModel.updateNotice.collect { notice ->
+            val message = when (notice) {
+                UpdateNotice.UP_TO_DATE -> resources.getString(R.string.update_up_to_date, com.pitstophub.app.BuildConfig.VERSION_NAME)
+                UpdateNotice.FAILED -> resources.getString(R.string.update_check_failed)
+            }
+            scope.launch { snackbar.showSnackbar(message) }
+        }
+    }
+
     when (state) {
         UpdateState.Idle -> Unit
         is UpdateState.Available -> UpdateAlert(

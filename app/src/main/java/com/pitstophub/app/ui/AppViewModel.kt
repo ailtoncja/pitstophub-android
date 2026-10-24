@@ -7,11 +7,15 @@ import com.pitstophub.app.AppContainer
 import com.pitstophub.app.data.model.Category
 import com.pitstophub.app.data.model.CategoryData
 import com.pitstophub.app.update.DownloadResult
+import com.pitstophub.app.update.ManualCheck
 import com.pitstophub.app.update.ReleaseInfo
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
@@ -46,6 +50,9 @@ sealed interface UpdateState {
     data class Failed(val rejected: Boolean) : UpdateState
 }
 
+/** Resposta de uma conferida pedida na hora, mostrada como aviso rapido. */
+enum class UpdateNotice { UP_TO_DATE, FAILED }
+
 /** Categoria selecionada + dados dela, compartilhados pelas abas. */
 class AppViewModel(private val container: AppContainer) : ViewModel() {
 
@@ -75,6 +82,14 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
 
     private var downloadJob: Job? = null
 
+    /** Enquanto o botao "Procurar atualizacao" espera a resposta do GitHub. */
+    private val _checkingUpdate = MutableStateFlow(false)
+    val checkingUpdate: StateFlow<Boolean> = _checkingUpdate.asStateFlow()
+
+    /** Aviso rapido do resultado de uma conferida pedida na hora. */
+    private val _updateNotice = MutableSharedFlow<UpdateNotice>()
+    val updateNotice: SharedFlow<UpdateNotice> = _updateNotice.asSharedFlow()
+
     init {
         viewModelScope.launch {
             _categories.value = repository.categories()
@@ -100,6 +115,31 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                 is DownloadResult.Ready -> UpdateState.Ready(release, result.apk)
                 is DownloadResult.Failed -> UpdateState.Failed(result.rejected)
             }
+        }
+    }
+
+    /**
+     * Botao "Procurar atualizacao": vai a rede na hora, sem esperar as 6 horas da conferida automatica.
+     * O resultado aparece como aviso rapido (em dia / nao deu) ou como o proprio dialogo da versao nova.
+     */
+    fun checkForUpdates() {
+        if (_checkingUpdate.value || _update.value !is UpdateState.Idle) return
+        _checkingUpdate.value = true
+        viewModelScope.launch {
+            when (val result = updater.checkNow()) {
+                is ManualCheck.Available -> _update.value = UpdateState.Available(result.release)
+                ManualCheck.UpToDate -> _updateNotice.emit(UpdateNotice.UP_TO_DATE)
+                ManualCheck.Failed -> _updateNotice.emit(UpdateNotice.FAILED)
+            }
+            _checkingUpdate.value = false
+        }
+    }
+
+    /** Volta do segundo plano: se ja passou o intervalo, confere de novo sem a pessoa precisar reabrir o app. */
+    fun onForeground() {
+        if (_update.value !is UpdateState.Idle) return
+        viewModelScope.launch {
+            updater.checkIfDue()?.let { if (_update.value is UpdateState.Idle) _update.value = UpdateState.Available(it) }
         }
     }
 

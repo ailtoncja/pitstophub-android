@@ -10,4 +10,9 @@
     <string name="update_permission">Para instalar, permita que o PitStopHub instale apps (\"Instalar apps desconhecidos\") e depois toque em Instalar.</string>
     <string name="update_failed">Não foi possível baixar a atualização. Tente mais tarde.</string>
     <string name="update_rejected">A atualização não passou na verificação de segurança e foi descartada.</string>
+    <string name="update_up_to_date">Você já está na versão mais recente (%1$s).</string>
+    <string name="update_check_failed">Não foi possível procurar atualização. Tente mais tarde.</string>
+    <string name="profile_update">Procurar atualização</string>
+    <string name="profile_update_hint">Versão instalada: %1$s</string>
+    <string name="profile_update_checking">Procurando…</string>
 </resources>

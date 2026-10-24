@@ -10,4 +10,9 @@
     <string name="update_permission">To install it, allow PitStopHub to install apps (\"Install unknown apps\"), then tap Install.</string>
     <string name="update_failed">Couldn\'t download the update. Try again later.</string>
     <string name="update_rejected">The update failed the security check and was discarded.</string>
+    <string name="update_up_to_date">You already have the latest version (%1$s).</string>
+    <string name="update_check_failed">Couldn\'t check for updates. Try again later.</string>
+    <string name="profile_update">Check for updates</string>
+    <string name="profile_update_hint">Installed version: %1$s</string>
+    <string name="profile_update_checking">Checking…</string>
 </resources>

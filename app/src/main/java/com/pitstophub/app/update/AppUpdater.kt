@@ -19,6 +19,17 @@ sealed interface DownloadResult {
     data class Failed(val rejected: Boolean) : DownloadResult
 }
 
+/** Resultado de uma conferida pedida pela pessoa (botao "Procurar atualizacao"), que sempre vai a rede. */
+sealed interface ManualCheck {
+    data class Available(val release: ReleaseInfo) : ManualCheck
+
+    /** Ja esta na versao mais nova publicada. */
+    data object UpToDate : ManualCheck
+
+    /** Sem rede, ou o GitHub nao respondeu. */
+    data object Failed : ManualCheck
+}
+
 /**
  * Atualizacao do app pelos GitHub Releases (o APK nao passa pela Play Store):
  *
@@ -47,21 +58,36 @@ class AppUpdater(
     suspend fun checkIfDue(): ReleaseInfo? {
         val last = store.getString(KEY_LAST_CHECK)?.toLongOrNull() ?: 0L
         val current = now()
-        if (current - last !in 0 until UpdateRules.CHECK_INTERVAL_MS) {
-            store.putString(KEY_LAST_CHECK, current.toString())
-            try {
-                val result = http.execute("GET", UpdateRules.LATEST_RELEASE_URL, GITHUB_HEADERS)
-                if (result.ok) {
-                    val latest = UpdateRules.parseRelease(result.body)?.takeIf { UpdateRules.isNewer(it.tag, installedVersion) }
-                    store.putString(KEY_PENDING, latest?.let { AppJson.encodeToString(it) })
-                }
-            } catch (e: CancellationException) {
-                throw e
-            } catch (_: Exception) {
-                // sem rede: fica com o que ja se sabia
-            }
-        }
+        if (current - last !in 0 until UpdateRules.CHECK_INTERVAL_MS) fetchLatest()
         return pending()
+    }
+
+    /**
+     * Conferida pedida na hora (botao nas configuracoes): ignora o intervalo de 6 horas e um "agora nao"
+     * anterior, porque quem tocou no botao quer a resposta agora.
+     */
+    suspend fun checkNow(): ManualCheck {
+        if (!fetchLatest()) return ManualCheck.Failed
+        return pending()?.let { ManualCheck.Available(it) } ?: ManualCheck.UpToDate
+    }
+
+    /** Consulta o GitHub e guarda o resultado. `false` so quando a rede falhou (o que ja se sabia continua valendo). */
+    private suspend fun fetchLatest(): Boolean {
+        store.putString(KEY_LAST_CHECK, now().toString())
+        return try {
+            val result = http.execute("GET", UpdateRules.LATEST_RELEASE_URL, GITHUB_HEADERS)
+            // Sem "tag_name" nao e a resposta da API (pagina de erro, portal de wi-fi...): nao da para
+            // dizer que esta em dia so porque veio 200.
+            if (!result.ok || !result.body.contains("\"tag_name\"")) return false
+            val latest = UpdateRules.parseRelease(result.body)?.takeIf { UpdateRules.isNewer(it.tag, installedVersion) }
+            store.putString(KEY_PENDING, latest?.let { AppJson.encodeToString(it) })
+            true
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            // sem rede: fica com o que ja se sabia
+            false
+        }
     }
 
     /** "Agora nao": nao pergunta de novo ate a proxima consulta ao GitHub. */
