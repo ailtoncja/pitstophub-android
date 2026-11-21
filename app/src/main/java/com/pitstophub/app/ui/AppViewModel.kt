@@ -100,8 +100,8 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
         viewModelScope.launch {
             // APKs de uma atualizacao anterior (instalada ou nao) ja nao servem.
             updater.cleanup()
-            // Em segundo plano e calado: sem rede, ou sem versao nova, nada aparece.
-            updater.checkIfDue()?.let { _update.value = UpdateState.Available(it) }
+            // Em segundo plano e calado: sem rede, ou sem versao nova, nada aparece. Confere na hora ao abrir.
+            updater.checkIfDue(onLaunch = true)?.let { _update.value = UpdateState.Available(it) }
         }
     }
 

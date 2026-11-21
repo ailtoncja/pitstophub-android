@@ -55,7 +55,7 @@ object UpdateRules {
     val REDIRECT_HOSTS = setOf("objects.githubusercontent.com", "release-assets.githubusercontent.com")
 
     const val MAX_APK_BYTES = 100L * 1024 * 1024
-    const val CHECK_INTERVAL_MS = 6L * 60 * 60 * 1000
+    const val CHECK_INTERVAL_MS = 10L * 60 * 1000
 
     private val VERSION = Regex("""^[vV]?(\d{1,6}(?:\.\d{1,6}){0,3})$""")
     private val HEX64 = Regex("""(?<![0-9a-fA-F])[0-9a-fA-F]{64}(?![0-9a-fA-F])""")
