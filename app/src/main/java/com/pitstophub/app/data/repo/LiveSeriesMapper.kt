@@ -14,6 +14,7 @@ import com.pitstophub.app.data.remote.ApiBrasilStandings
 import com.pitstophub.app.data.remote.ApiBrasilStandingsClass
 import com.pitstophub.app.data.remote.ApiEbDriver
 import com.pitstophub.app.data.remote.ApiEbTeam
+import com.pitstophub.app.data.remote.ApiEngineSession
 import com.pitstophub.app.data.remote.ApiGtwcTeam
 import com.pitstophub.app.data.remote.ApiRace
 import com.pitstophub.app.data.remote.ApiStandings
@@ -64,8 +65,10 @@ object LiveSeriesMapper {
     )
 
     fun gtwcRaces(seriesId: String, api: List<ApiRace>, now: Instant): List<Race> = api.map { race ->
-        val official = gtwcOfficialWinners[seriesId]?.get(race.raceId)
-            ?.split(Regex("\\s*/\\s*"))?.joinToString(" / ") { TextUtil.toDriverName(it) }
+        val official = if (race.date.startsWith("2026-")) {
+            gtwcOfficialWinners[seriesId]?.get(race.raceId)
+                ?.split(Regex("\\s*/\\s*"))?.joinToString(" / ") { TextUtil.toDriverName(it) }
+        } else null
         Race(
             id = race.raceId,
             name = race.name,
@@ -139,9 +142,9 @@ object LiveSeriesMapper {
         Race(
             id = race.raceId,
             name = race.name,
-            enName = race.name,
+            enName = race.enName ?: race.name,
             location = race.location.orEmpty(),
-            enLocation = race.location,
+            enLocation = race.enLocation ?: race.location,
             circuit = race.circuit ?: race.location.orEmpty(),
             date = race.date,
             startsAt = race.startsAt,
@@ -153,6 +156,54 @@ object LiveSeriesMapper {
             winner = race.winner,
             round = race.round,
         )
+    }
+
+    /** Mapeia corridas vindas da api-motorsports (/bootstrap) para categorias sincronizadas. */
+    fun engineRaces(api: List<ApiBrasilRace>): List<Race> = api.map { race ->
+        Race(
+            id = race.raceId,
+            name = race.name,
+            enName = race.enName,
+            location = race.location.orEmpty(),
+            enLocation = race.enLocation,
+            circuit = race.circuit ?: race.location.orEmpty(),
+            date = race.date,
+            startsAt = race.startsAt,
+            status = when (race.status) {
+                "completed" -> RaceStatus.COMPLETED
+                "cancelled" -> RaceStatus.CANCELLED
+                else -> RaceStatus.UPCOMING
+            },
+            winner = race.winner,
+            round = race.round,
+        )
+    }
+
+    private val PREFERRED_SESSIONS = listOf("feature", "feature2", "feature1", "race", "main", "race2", "race1")
+    private val BONUS_SESSION_RE = Regex("^(bonus|qualifying\\d*|practice\\d*|pole(-le-mans)?|supersunday|powerstage)$", RegexOption.IGNORE_CASE)
+
+    /** Escolhe a sessao principal de corrida gravada em race_results (porte de pickMainSession de api-motorsports.ts). */
+    fun pickMainSession(sessions: List<ApiEngineSession>): List<RaceResultRow> {
+        val withRows = sessions.filter { it.rows.isNotEmpty() }
+        if (withRows.isEmpty()) return emptyList()
+        val chosen = PREFERRED_SESSIONS.firstNotNullOfOrNull { pref ->
+            withRows.firstOrNull { it.session.equals(pref, ignoreCase = true) }
+        } ?: withRows.firstOrNull { !BONUS_SESSION_RE.matches(it.session) }
+            ?: withRows.first()
+
+        return chosen.rows.mapIndexed { idx, row ->
+            RaceResultRow(
+                position = row.position?.toString() ?: (idx + 1).toString(),
+                driver = row.driver,
+                code = row.driver.take(3).uppercase(),
+                team = row.team.orEmpty(),
+                grid = null,
+                timeOrStatus = row.time?.takeIf { it.isNotBlank() } ?: row.status.orEmpty(),
+                points = row.points ?: 0.0,
+                driverNumber = row.number?.takeIf { it.isNotBlank() },
+                finishPosition = row.position,
+            )
+        }
     }
 
     /** Nenhuma das duas fontes oficiais publica a equipe de cada piloto, entao o grid vem sem equipe. */

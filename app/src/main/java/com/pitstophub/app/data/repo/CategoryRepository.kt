@@ -5,19 +5,27 @@ import com.pitstophub.app.data.model.Category
 import com.pitstophub.app.data.model.CategoryData
 import com.pitstophub.app.data.model.CategoryStandings
 import com.pitstophub.app.data.model.Driver
+import com.pitstophub.app.data.model.Race
 import com.pitstophub.app.data.model.Team
 import com.pitstophub.app.data.model.TeamBio
+import com.pitstophub.app.data.remote.ApiBootstrap
+import com.pitstophub.app.data.remote.ApiStandings
+import com.pitstophub.app.data.remote.JRace
 import com.pitstophub.app.data.remote.JolpicaClient
 import com.pitstophub.app.data.remote.MotorsportsClient
 import com.pitstophub.app.data.remote.SupabaseRestClient
+import com.pitstophub.app.domain.CategoryRules
 import com.pitstophub.app.domain.DriverRound
 import com.pitstophub.app.domain.RaceTime
+import com.pitstophub.app.domain.RemoteCategoryRules
 import com.pitstophub.app.domain.TeamRoundPoints
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import java.time.Duration
 import java.time.Instant
 import java.time.ZoneOffset
 
@@ -48,9 +56,10 @@ class CategoryRepository(
     private val motorsports: MotorsportsClient,
     private val supabase: SupabaseRestClient,
     private val clock: () -> Instant = { Instant.now() },
-    private val ttlMillis: Long = 5 * 60_000L,
+    private val ttlMillis: Long = 10 * 60_000L,
 ) {
     private class Entry(val loadedAt: Instant, val data: CategoryData)
+    private class BootstrapEntry(val loadedAt: Instant, val data: ApiBootstrap)
 
     private val mutex = Mutex()
     private val cache = HashMap<String, Entry>()
@@ -58,6 +67,10 @@ class CategoryRepository(
     private val driverSeasonCache = HashMap<String, List<DriverRound>>()
     private val previousStandingsCache = HashMap<String, CategoryStandings?>()
     private val teamPointsCache = HashMap<String, List<TeamRoundPoints>>()
+
+    private val bootstrapMutex = Mutex()
+    private var bootstrapEntry: BootstrapEntry? = null
+    private var inFlightBootstrap: CompletableDeferred<ApiBootstrap?>? = null
 
     suspend fun categories(): List<Category> = catalog.categories()
 
@@ -75,36 +88,103 @@ class CategoryRepository(
         }
         val base = catalog.category(id) ?: throw NoSuchElementException("Categoria desconhecida: $id")
         // O calendario do catalogo acompanha o dado ao vivo: etapas canceladas, ids do catalogo e pares de substituicao.
-        val data = loadLive(base, now).copy(catalogCalendar = base.calendar)
+        val data = loadLive(base, now, force).copy(catalogCalendar = base.calendar)
         mutex.withLock { cache[id] = Entry(now, data) }
         return data
     }
 
-    private suspend fun loadLive(base: Category, now: Instant): CategoryData = try {
+    private suspend fun bootstrap(force: Boolean): ApiBootstrap? {
+        val now = clock()
+        val waiter: CompletableDeferred<ApiBootstrap?>
+        val owner: Boolean
+        bootstrapMutex.withLock {
+            if (!force) {
+                bootstrapEntry?.takeIf { now.toEpochMilli() - it.loadedAt.toEpochMilli() < ttlMillis }?.let { return it.data }
+            }
+            val current = inFlightBootstrap
+            if (current != null && !force) {
+                waiter = current
+                owner = false
+            } else {
+                waiter = CompletableDeferred()
+                inFlightBootstrap = waiter
+                owner = true
+            }
+        }
+        if (!owner) return waiter.await()
+
+        val fetched = try {
+            motorsports.bootstrap()
+        } catch (e: CancellationException) {
+            bootstrapMutex.withLock {
+                if (inFlightBootstrap === waiter) inFlightBootstrap = null
+            }
+            waiter.cancel(e)
+            throw e
+        } catch (_: Exception) {
+            null
+        }
+        val resolved = bootstrapMutex.withLock {
+            if (fetched != null) bootstrapEntry = BootstrapEntry(clock(), fetched)
+            if (inFlightBootstrap === waiter) inFlightBootstrap = null
+            fetched ?: bootstrapEntry?.data
+        }
+        waiter.complete(resolved)
+        return resolved
+    }
+
+    private suspend fun loadLive(base: Category, now: Instant, force: Boolean): CategoryData = try {
+        if (base.id == "f1") return loadF1(base, now)
+        val bs = bootstrap(force)
+        val remoteRules = bs?.categories?.get(base.id)?.rules ?: bs?.rulesByCategory?.get(base.id)
         when {
-            base.id == "f1" -> loadF1(base, now)
-            SyncedMerger.isSynced(base.id) -> loadSynced(base)
-            base.id in LiveSeriesMapper.gtwcSeriesByCategory -> loadGtwc(base, now)
-            base.id == LiveSeriesMapper.ENDURANCE_BRASIL -> loadEnduranceBrasil(base)
-            base.id in LiveSeriesMapper.brasilCategories -> loadBrasil(base)
-            else -> toData(base, live = false, liveStandings = false, offline = false)
+            SyncedMerger.isSynced(base.id) -> loadSynced(base, bs, remoteRules)
+            base.id in LiveSeriesMapper.gtwcSeriesByCategory -> loadGtwc(base, now, bs, remoteRules)
+            base.id == LiveSeriesMapper.ENDURANCE_BRASIL -> loadEnduranceBrasil(base, bs, remoteRules)
+            base.id in LiveSeriesMapper.brasilCategories -> loadBrasil(base, bs, remoteRules)
+            else -> toData(base, live = false, liveStandings = false, offline = false, remoteRules = remoteRules)
         }
     } catch (e: CancellationException) {
         throw e
-    } catch (e: Exception) {
+    } catch (_: Exception) {
         toData(base, live = false, liveStandings = false, offline = true)
     }
 
     // --- F1 (Jolpica) --------------------------------------------------------------------------
 
+    private suspend fun resolveF1Season(base: Category, now: Instant): Pair<String, Result<List<JRace>>> {
+        val currentYear = now.atZone(ZoneOffset.UTC).year
+        val catalogYear = base.calendar.firstOrNull()?.date?.take(4)?.toIntOrNull() ?: currentYear
+        val targetYear = maxOf(currentYear, catalogYear)
+        var year = targetYear.toString()
+        var racesResult = attempt { jolpica.races(year) }
+
+        if (racesResult.getOrNull().isNullOrEmpty() && targetYear > catalogYear) {
+            year = (targetYear - 1).toString()
+            racesResult = attempt { jolpica.races(year) }
+        }
+
+        val races = racesResult.getOrNull().orEmpty()
+        if (races.isNotEmpty()) {
+            val lastDate = races.maxOf { it.date }
+            val lastEnd = runCatching { Instant.parse("${lastDate}T23:59:59Z") }.getOrNull()
+            if (lastEnd != null && Duration.between(lastEnd, now) > ROLLOVER_GRACE) {
+                val nextYear = (year.toInt() + 1).toString()
+                val nextResult = attempt { jolpica.races(nextYear) }
+                if (!nextResult.getOrNull().isNullOrEmpty()) {
+                    return nextYear to nextResult
+                }
+            }
+        }
+        return year to racesResult
+    }
+
     private suspend fun loadF1(base: Category, now: Instant): CategoryData = coroutineScope {
-        val year = base.calendar.firstOrNull()?.date?.take(4) ?: now.atZone(ZoneOffset.UTC).year.toString()
-        val races = async { attempt { jolpica.races(year) } }
+        val (year, racesResult) = resolveF1Season(base, now)
         val winners = async { attempt { jolpica.winners(year) } }
         val drivers = async { attempt { jolpica.driverStandings(year) } }
         val constructors = async { attempt { jolpica.constructorStandings(year) } }
 
-        val racesResult = races.await()
         val winnersResult = winners.await()
         val driversResult = drivers.await()
         val constructorsResult = constructors.await()
@@ -127,46 +207,73 @@ class CategoryRepository(
         )
     }
 
-    // --- categorias sincronizadas (Supabase) ---------------------------------------------------
+    // --- categorias sincronizadas (/bootstrap + fallback Supabase) ------------------------------
 
-    private suspend fun loadSynced(base: Category): CategoryData {
-        // Sem URL/anon key no local.properties o app usa o catalogo estatico, sem tratar como erro.
-        if (!supabase.enabled) return toData(base, live = false, liveStandings = false, offline = false)
-        return coroutineScope {
-            val races = async { attempt { supabase.races(base.id) } }
-            val standings = async { attempt { supabase.standings(base.id) } }
-            val racesResult = races.await()
-            val standingsResult = standings.await()
-
-            var merged = base
-            val raceRows = racesResult.getOrNull().orEmpty()
-            val standingRows = standingsResult.getOrNull().orEmpty()
-            if (raceRows.isNotEmpty()) merged = SyncedMerger.mergeCalendar(merged, raceRows)
-            if (standingRows.isNotEmpty()) merged = SyncedMerger.mergeStandings(merged, standingRows)
-            toData(
-                merged,
-                live = raceRows.isNotEmpty(),
-                liveStandings = SyncedMerger.matchingStandings(merged, standingRows).isNotEmpty(),
-                offline = racesResult.isFailure && standingsResult.isFailure,
-            )
+    private suspend fun loadSynced(base: Category, bs: ApiBootstrap?, remoteRules: RemoteCategoryRules?): CategoryData = coroutineScope {
+        val bsCat = bs?.categories?.get(base.id)
+        val bsRaces = bsCat?.races.orEmpty().takeIf { it.isNotEmpty() }?.let(LiveSeriesMapper::engineRaces)
+        val bsStandings = bsCat?.standings?.takeIf {
+            it.drivers.orEmpty().any { g -> g.entries.isNotEmpty() } || it.teams.orEmpty().any { g -> g.entries.isNotEmpty() }
         }
+
+        val racesDeferred = if (bsRaces == null && supabase.enabled) async { attempt { supabase.races(base.id) } } else null
+        val standingsDeferred = if (bsStandings == null && supabase.enabled) async { attempt { supabase.standings(base.id) } } else null
+        val racesResult = racesDeferred?.await()
+        val standingsResult = standingsDeferred?.await()
+
+        var merged = base
+        var hasLiveCalendar = false
+        if (bsRaces != null) {
+            merged = SyncedMerger.mergeCalendarRaces(merged, bsRaces)
+            hasLiveCalendar = true
+        } else {
+            val raceRows = racesResult?.getOrNull().orEmpty()
+            if (raceRows.isNotEmpty()) {
+                merged = SyncedMerger.mergeCalendar(merged, raceRows)
+                hasLiveCalendar = true
+            }
+        }
+
+        var hasLiveStandings = false
+        if (bsStandings != null) {
+            val prevStandings = merged.standings
+            merged = SyncedMerger.mergeEngineStandings(merged, bsStandings)
+            hasLiveStandings = merged.standings != null && merged.standings != prevStandings
+        } else {
+            val standingRows = standingsResult?.getOrNull().orEmpty()
+            if (standingRows.isNotEmpty()) {
+                merged = SyncedMerger.mergeStandings(merged, standingRows)
+                hasLiveStandings = SyncedMerger.matchingStandings(merged, standingRows).isNotEmpty()
+            }
+        }
+
+        val failed = bsRaces == null && supabase.enabled && (racesResult?.isFailure == true && standingsResult?.isFailure == true)
+        toData(
+            merged,
+            live = hasLiveCalendar,
+            liveStandings = hasLiveStandings,
+            offline = failed,
+            remoteRules = remoteRules,
+        )
     }
 
     // --- GT World Challenge (api-motorsports) ---------------------------------------------------
 
-    private suspend fun loadGtwc(base: Category, now: Instant): CategoryData = coroutineScope {
+    private suspend fun loadGtwc(base: Category, now: Instant, bs: ApiBootstrap?, remoteRules: RemoteCategoryRules?): CategoryData = coroutineScope {
         val seriesId = LiveSeriesMapper.gtwcSeriesByCategory.getValue(base.id)
-        val races = async { attempt { motorsports.gtwcRaces(seriesId) } }
-        val teams = async { attempt { motorsports.gtwcTeams(seriesId) } }
-        val standings = async { attempt { motorsports.gtwcStandings(seriesId) } }
+        val bsData = bs?.gtwc?.get(seriesId)
+
+        val racesResult = bsData?.races?.let { Result.success(it) } ?: attempt { motorsports.gtwcRaces(seriesId) }
+        val teamsResult = bsData?.teams?.let { Result.success(it) } ?: attempt { motorsports.gtwcTeams(seriesId) }
+        val standingsResult = bsData?.standings?.let { Result.success(it) } ?: attempt { motorsports.gtwcStandings(seriesId) }
 
         var merged = base
-        val racesResult = races.await()
-        val teamsResult = teams.await()
-        val standingsResult = standings.await()
-
+        var seasonChanged = false
         racesResult.getOrNull()?.takeIf { it.isNotEmpty() }?.let {
-            merged = merged.copy(calendar = LiveSeriesMapper.gtwcRaces(seriesId, it, now))
+            val liveCal = LiveSeriesMapper.gtwcRaces(seriesId, it, now)
+            val liveYears = liveCal.map { r -> r.date.take(4) }.toSet()
+            seasonChanged = merged.calendar.any { r -> r.date.take(4) !in liveYears }
+            merged = merged.copy(calendar = liveCal, standings = if (seasonChanged) null else merged.standings)
         }
         teamsResult.getOrNull()?.takeIf { it.isNotEmpty() }?.let { api ->
             val (teamList, driverList) = LiveSeriesMapper.gtwcRoster(api)
@@ -184,16 +291,18 @@ class CategoryRepository(
             live = racesResult.getOrNull().orEmpty().isNotEmpty(),
             liveStandings = liveStandings != null,
             offline = racesResult.isFailure && teamsResult.isFailure,
+            remoteRules = remoteRules,
         )
     }
 
     // --- Endurance Brasil (api-motorsports) -----------------------------------------------------
 
-    private suspend fun loadEnduranceBrasil(base: Category): CategoryData = coroutineScope {
-        val races = async { attempt { motorsports.ebRaces() } }
-        val teams = async { attempt { motorsports.ebTeams() } }
-        val drivers = async { attempt { motorsports.ebDrivers() } }
-        val standings = async { attempt { motorsports.ebStandings() } }
+    private suspend fun loadEnduranceBrasil(base: Category, bs: ApiBootstrap?, remoteRules: RemoteCategoryRules?): CategoryData = coroutineScope {
+        val bsEb = bs?.enduranceBrasil
+        val races = async { bsEb?.races?.let { Result.success(it) } ?: attempt { motorsports.ebRaces() } }
+        val teams = async { bsEb?.teams?.let { Result.success(it) } ?: attempt { motorsports.ebTeams() } }
+        val drivers = async { bsEb?.drivers?.let { Result.success(it) } ?: attempt { motorsports.ebDrivers() } }
+        val standings = async { bsEb?.standings?.let { Result.success(it) } ?: attempt { motorsports.ebStandings() } }
 
         var merged = base
         val racesResult = races.await()
@@ -201,7 +310,12 @@ class CategoryRepository(
         val driversResult = drivers.await()
         val standingsResult = standings.await()
 
-        racesResult.getOrNull()?.takeIf { it.isNotEmpty() }?.let { merged = merged.copy(calendar = LiveSeriesMapper.ebRaces(it)) }
+        racesResult.getOrNull()?.takeIf { it.isNotEmpty() }?.let {
+            val liveCal = LiveSeriesMapper.ebRaces(it)
+            val liveYears = liveCal.map { r -> r.date.take(4) }.toSet()
+            val seasonChanged = merged.calendar.any { r -> r.date.take(4) !in liveYears }
+            merged = merged.copy(calendar = liveCal, standings = if (seasonChanged) null else merged.standings)
+        }
         val apiTeams = teamsResult.getOrNull().orEmpty()
         val apiDrivers = driversResult.getOrNull().orEmpty()
         if (apiTeams.isNotEmpty() || apiDrivers.isNotEmpty()) {
@@ -216,22 +330,29 @@ class CategoryRepository(
             live = racesResult.getOrNull().orEmpty().isNotEmpty(),
             liveStandings = liveStandings != null,
             offline = racesResult.isFailure && teamsResult.isFailure,
+            remoteRules = remoteRules,
         )
     }
 
     // --- NASCAR Brasil e Porsche Cup Brasil (api-motorsports) -----------------------------------
 
-    private suspend fun loadBrasil(base: Category): CategoryData = coroutineScope {
-        val races = async { attempt { motorsports.brasilRaces(base.id) } }
-        val drivers = async { attempt { motorsports.brasilDrivers(base.id) } }
-        val standings = async { attempt { motorsports.brasilStandings(base.id) } }
+    private suspend fun loadBrasil(base: Category, bs: ApiBootstrap?, remoteRules: RemoteCategoryRules?): CategoryData = coroutineScope {
+        val bsCat = bs?.categories?.get(base.id)
+        val races = async { bsCat?.races?.let { Result.success(it) } ?: attempt { motorsports.brasilRaces(base.id) } }
+        val drivers = async { bsCat?.drivers?.let { Result.success(it) } ?: attempt { motorsports.brasilDrivers(base.id) } }
+        val standings = async { bsCat?.standings?.let { Result.success(it) } ?: attempt { motorsports.brasilStandings(base.id) } }
 
         var merged = base
         val racesResult = races.await()
         val driversResult = drivers.await()
         val standingsResult = standings.await()
 
-        racesResult.getOrNull()?.takeIf { it.isNotEmpty() }?.let { merged = merged.copy(calendar = LiveSeriesMapper.brasilRaces(it)) }
+        racesResult.getOrNull()?.takeIf { it.isNotEmpty() }?.let {
+            val liveCal = LiveSeriesMapper.brasilRaces(it)
+            val liveYears = liveCal.map { r -> r.date.take(4) }.toSet()
+            val seasonChanged = merged.calendar.any { r -> r.date.take(4) !in liveYears }
+            merged = merged.copy(calendar = liveCal, standings = if (seasonChanged) null else merged.standings)
+        }
         driversResult.getOrNull()?.takeIf { it.isNotEmpty() }?.let { merged = merged.copy(drivers = LiveSeriesMapper.brasilDrivers(it)) }
         val liveStandings = standingsResult.getOrNull()?.let(LiveSeriesMapper::brasilStandings)
         if (liveStandings != null) merged = merged.copy(standings = liveStandings)
@@ -241,10 +362,20 @@ class CategoryRepository(
             live = racesResult.getOrNull().orEmpty().isNotEmpty(),
             liveStandings = liveStandings != null,
             offline = racesResult.isFailure && standingsResult.isFailure,
+            remoteRules = remoteRules,
         )
     }
 
-    // --- resultados de corrida (F1) -------------------------------------------------------------
+    // --- resultados de corrida (F1 e api-motorsports) -------------------------------------------
+
+    /** Resultado da sessao principal gravada para uma etapa das categorias servidas pela api-motorsports. */
+    suspend fun engineRaceResults(categoryId: String, raceId: String): List<RaceResultRow> {
+        val key = "$categoryId:$raceId"
+        mutex.withLock { resultsCache[key] }?.let { return it }
+        val rows = LiveSeriesMapper.pickMainSession(motorsports.engineRaceDetail(categoryId, raceId).sessions)
+        if (rows.isNotEmpty()) mutex.withLock { resultsCache[key] = rows }
+        return rows
+    }
 
     suspend fun f1Results(season: String, round: Int): List<RaceResultRow> {
         val key = "$season:$round"
@@ -339,11 +470,23 @@ class CategoryRepository(
 
     // --- helpers --------------------------------------------------------------------------------
 
-    private fun toData(category: Category, live: Boolean, liveStandings: Boolean, offline: Boolean): CategoryData {
+    private fun toData(
+        category: Category,
+        live: Boolean,
+        liveStandings: Boolean,
+        offline: Boolean,
+        remoteRules: RemoteCategoryRules? = null,
+    ): CategoryData {
         val now = clock()
         val settled = category.copy(calendar = RaceTime.settle(category.calendar, now))
-        val season = settled.calendar.firstOrNull()?.date?.take(4) ?: now.atZone(ZoneOffset.UTC).year.toString()
-        return CategoryData(settled, season, live, liveStandings, offline)
+        val nowYear = now.atZone(ZoneOffset.UTC).year
+        val resolved = CategoryRules.resolve(settled, remoteRules, fallbackYear = nowYear)
+        val season = resolved.calendar.firstOrNull()?.date?.take(4) ?: nowYear.toString()
+        return CategoryData(resolved, season, live, liveStandings, offline)
+    }
+
+    companion object {
+        private val ROLLOVER_GRACE: Duration = Duration.ofDays(3)
     }
 
     private suspend fun <T> attempt(block: suspend () -> T): Result<T> = try {

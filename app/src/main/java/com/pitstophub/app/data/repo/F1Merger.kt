@@ -52,10 +52,12 @@ object F1Merger {
         val liveDrivers = buildDrivers(base, driverStandings)
         val drivers = if (liveDrivers.isNotEmpty()) mergeDrivers(base.drivers, liveDrivers) else base.drivers
         val standings = buildStandings(base, driverStandings, constructorStandings)
+        val liveYears = calendar.map { it.date.take(4) }.toSet()
+        val changedSeason = liveYears.isNotEmpty() && base.calendar.any { it.date.take(4) !in liveYears }
         return base.copy(
             drivers = drivers,
             calendar = if (calendar.isNotEmpty()) normalizeWinners(calendar, drivers) else base.calendar,
-            standings = standings ?: base.standings,
+            standings = standings ?: if (changedSeason) null else base.standings,
         )
     }
 
@@ -79,7 +81,7 @@ object F1Merger {
                 startsAt = isoInstant(race.date, race.time),
                 circuit = venue?.circuit ?: race.circuit.circuitName,
                 status = status,
-                winner = winners[race.round] ?: if (status == RaceStatus.COMPLETED) match?.winner else null,
+                winner = winners[race.round] ?: if (status == RaceStatus.COMPLETED && match?.date?.take(4) == race.date.take(4)) match.winner else null,
                 round = race.round.toIntOrNull(),
                 sessions = sessionsOf(race),
                 lat = race.circuit.location.lat?.toDoubleOrNull(),

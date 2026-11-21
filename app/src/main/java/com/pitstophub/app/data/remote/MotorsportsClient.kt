@@ -1,11 +1,12 @@
 package com.pitstophub.app.data.remote
 
+import com.pitstophub.app.domain.RemoteCategoryRules
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
 
-// api-motorsports: API propria (repositorio ailtoncja/api-motorsports) que raspa os sites oficiais do
-// GT World Challenge (Europe/America/Asia) e do Endurance Brasil. Mesmas rotas que o PWA usa.
+// api-motorsports: API propria (repositorio ailtoncja/api-motorsports) que raspa os sites oficiais e
+// tambem entrega o pacote agregado /bootstrap para as 15 categorias nao-F1. Mesmas rotas que o site usa.
 
 @Serializable
 data class ApiRace(
@@ -71,7 +72,9 @@ data class ApiBrasilRace(
     val raceId: String,
     val round: Int? = null,
     val name: String,
+    val enName: String? = null,
     val location: String? = null,
+    val enLocation: String? = null,
     val circuit: String? = null,
     val date: String,
     val startsAt: String? = null,
@@ -90,6 +93,7 @@ data class ApiBrasilStandings(
     val season: Int? = null,
     val asOfRound: Int? = null,
     val drivers: List<ApiBrasilStandingsClass>? = null,
+    val teams: List<ApiBrasilStandingsClass>? = null,
 )
 
 @Serializable
@@ -97,10 +101,74 @@ data class ApiBrasilDriver(
     val driverId: String,
     val name: String,
     val number: String? = null,
+    val team: String? = null,
     val classes: List<String> = emptyList(),
 )
 
+@Serializable
+data class ApiBootstrapGtwcData(
+    val races: List<ApiRace> = emptyList(),
+    val teams: List<ApiGtwcTeam> = emptyList(),
+    val standings: ApiStandings = ApiStandings(),
+)
+
+@Serializable
+data class ApiBootstrapEbData(
+    val races: List<ApiRace> = emptyList(),
+    val teams: List<ApiEbTeam> = emptyList(),
+    val drivers: List<ApiEbDriver> = emptyList(),
+    val standings: ApiStandings = ApiStandings(),
+)
+
+@Serializable
+data class ApiBootstrapCategoryData(
+    val id: String = "",
+    val name: String = "",
+    val season: Int? = null,
+    val lastUpdate: String? = null,
+    val asOfRound: Int? = null,
+    val degraded: Boolean = false,
+    val races: List<ApiBrasilRace> = emptyList(),
+    val standings: ApiBrasilStandings = ApiBrasilStandings(),
+    val drivers: List<ApiBrasilDriver> = emptyList(),
+    val rules: RemoteCategoryRules? = null,
+)
+
+@Serializable
+data class ApiBootstrap(
+    val gtwc: Map<String, ApiBootstrapGtwcData?> = emptyMap(),
+    val enduranceBrasil: ApiBootstrapEbData? = null,
+    val categories: Map<String, ApiBootstrapCategoryData?> = emptyMap(),
+    val rulesByCategory: Map<String, RemoteCategoryRules?> = emptyMap(),
+)
+
+@Serializable
+data class ApiEngineResultRow(
+    val position: Int? = null,
+    val driver: String,
+    val team: String? = null,
+    val number: String? = null,
+    val points: Double? = null,
+    val time: String? = null,
+    val laps: Int? = null,
+    val status: String? = null,
+)
+
+@Serializable
+data class ApiEngineSession(
+    val session: String,
+    val official: Boolean = true,
+    val rows: List<ApiEngineResultRow> = emptyList(),
+)
+
+@Serializable
+data class ApiEngineRaceDetail(
+    val sessions: List<ApiEngineSession> = emptyList(),
+)
+
 class MotorsportsClient(private val http: HttpFetcher, private val baseUrl: String = BASE_URL) {
+
+    suspend fun bootstrap(): ApiBootstrap = one("/bootstrap")
 
     suspend fun gtwcRaces(seriesId: String): List<ApiRace> = list("/series/$seriesId/races")
     suspend fun gtwcTeams(seriesId: String): List<ApiGtwcTeam> = list("/series/$seriesId/teams")
@@ -114,6 +182,9 @@ class MotorsportsClient(private val http: HttpFetcher, private val baseUrl: Stri
     suspend fun brasilRaces(categoryId: String): List<ApiBrasilRace> = list("/$categoryId/races")
     suspend fun brasilDrivers(categoryId: String): List<ApiBrasilDriver> = list("/$categoryId/drivers")
     suspend fun brasilStandings(categoryId: String): ApiBrasilStandings = one("/$categoryId/standings")
+
+    suspend fun engineRaceDetail(categoryId: String, raceId: String): ApiEngineRaceDetail =
+        one("/$categoryId/races/$raceId")
 
     private suspend inline fun <reified T> list(path: String): List<T> =
         AppJson.decodeFromString<List<T>>(http.getString(baseUrl + path))

@@ -69,7 +69,7 @@ internal fun ruleIcon(title: String): ImageVector {
         "pontua" in t || "point" in t || "scoring" in t || "classifica" in t || "standing" in t -> Icons.Filled.Leaderboard
         "balance" in t || "bop" in t -> Icons.Filled.Tune
         "classe" in t || "class" in t || "piloto e" in t || "driver and" in t -> Icons.Filled.Groups
-        "carro" in t || " car" in t || t.startsWith("car") || "regulamento" in t || "rally1" in t || "brido" in t || "hybrid" in t -> Icons.Filled.DirectionsCar
+        "carro" in t || " car" in t || t.startsWith("car") || "regulamento" in t || "rally1" in t || "wrc27" in t || "brido" in t || "hybrid" in t -> Icons.Filled.DirectionsCar
         "curiosidade" in t || "trivia" in t || "fun fact" in t -> Icons.Filled.Lightbulb
         else -> Icons.Filled.Flag
     }

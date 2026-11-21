@@ -1328,7 +1328,11 @@
  {
   "categoryId": "imsa",
   "raceId": "daytona",
-  "info": null
+  "info": {
+   "trackImage": "/circuits/daytona-road.png",
+   "lengthKm": 5.729,
+   "osm": true
+  }
  },
  {
   "categoryId": "imsa",
@@ -1343,12 +1347,22 @@
  {
   "categoryId": "imsa",
   "raceId": "longbeach",
-  "info": null
+  "info": {
+   "trackImage": "/circuits/long-beach.png",
+   "lengthKm": 3.167,
+   "corners": 11,
+   "osm": true
+  }
  },
  {
   "categoryId": "imsa",
   "raceId": "lagunaseca",
-  "info": null
+  "info": {
+   "trackImage": "/circuits/laguna-seca.png",
+   "lengthKm": 3.602,
+   "corners": 11,
+   "osm": true
+  }
  },
  {
   "categoryId": "imsa",
@@ -1363,12 +1377,21 @@
  {
   "categoryId": "imsa",
   "raceId": "watkins",
-  "info": null
+  "info": {
+   "trackImage": "/circuits/watkins-glen.png",
+   "lengthKm": 5.552,
+   "direction": "clockwise",
+   "osm": true
+  }
  },
  {
   "categoryId": "imsa",
   "raceId": "mosport",
-  "info": null
+  "info": {
+   "trackImage": "/circuits/mosport.png",
+   "lengthKm": 3.957,
+   "osm": true
+  }
  },
  {
   "categoryId": "imsa",
@@ -1404,7 +1427,11 @@
  {
   "categoryId": "imsa",
   "raceId": "roadatlanta",
-  "info": null
+  "info": {
+   "trackImage": "/circuits/road-atlanta.png",
+   "lengthKm": 4.088,
+   "osm": true
+  }
  },
  {
   "categoryId": "wrc",
@@ -1498,7 +1525,12 @@
  {
   "categoryId": "indy",
   "raceId": "arlington",
-  "info": null
+  "info": {
+   "trackImage": "/circuits/arlington.png",
+   "lengthKm": 4.393,
+   "corners": 14,
+   "osm": true
+  }
  },
  {
   "categoryId": "indy",
@@ -1513,7 +1545,12 @@
  {
   "categoryId": "indy",
   "raceId": "long-beach-indy",
-  "info": null
+  "info": {
+   "trackImage": "/circuits/long-beach.png",
+   "lengthKm": 3.167,
+   "corners": 11,
+   "osm": true
+  }
  },
  {
   "categoryId": "indy",
@@ -1547,7 +1584,11 @@
  {
   "categoryId": "indy",
   "raceId": "gateway",
-  "info": null
+  "info": {
+   "trackImage": "/circuits/gateway.png",
+   "lengthKm": 2.012,
+   "osm": true
+  }
  },
  {
   "categoryId": "indy",
@@ -1581,7 +1622,12 @@
  {
   "categoryId": "indy",
   "raceId": "portland",
-  "info": null
+  "info": {
+   "trackImage": "/circuits/portland.png",
+   "lengthKm": 3.166,
+   "corners": 12,
+   "osm": true
+  }
  },
  {
   "categoryId": "indy",
@@ -1625,12 +1671,21 @@
  {
   "categoryId": "indy",
   "raceId": "laguna-seca-indy",
-  "info": null
+  "info": {
+   "trackImage": "/circuits/laguna-seca.png",
+   "lengthKm": 3.602,
+   "corners": 11,
+   "osm": true
+  }
  },
  {
   "categoryId": "nascar",
   "raceId": "clash",
-  "info": null
+  "info": {
+   "trackImage": "/circuits/bowman-gray.png",
+   "lengthKm": 0.402,
+   "osm": true
+  }
  },
  {
   "categoryId": "nascar",
@@ -1662,7 +1717,12 @@
  {
   "categoryId": "nascar",
   "raceId": "cota-nascar",
-  "info": null
+  "info": {
+   "trackImage": "/circuits/cota-national.png",
+   "lengthKm": 3.862,
+   "corners": 17,
+   "osm": true
+  }
  },
  {
   "categoryId": "nascar",
@@ -1676,27 +1736,47 @@
  {
   "categoryId": "nascar",
   "raceId": "vegas1",
-  "info": null
+  "info": {
+   "trackImage": "/circuits/las-vegas-motor-speedway.png",
+   "osm": true,
+   "lengthKm": 2.414
+  }
  },
  {
   "categoryId": "nascar",
   "raceId": "darlington1",
-  "info": null
+  "info": {
+   "trackImage": "/circuits/darlington.png",
+   "lengthKm": 2.198,
+   "osm": true
+  }
  },
  {
   "categoryId": "nascar",
   "raceId": "martinsville1",
-  "info": null
+  "info": {
+   "trackImage": "/circuits/martinsville.png",
+   "lengthKm": 0.847,
+   "osm": true
+  }
  },
  {
   "categoryId": "nascar",
   "raceId": "bristol1",
-  "info": null
+  "info": {
+   "trackImage": "/circuits/bristol.png",
+   "lengthKm": 0.858,
+   "osm": true
+  }
  },
  {
   "categoryId": "nascar",
   "raceId": "kansas1",
-  "info": null
+  "info": {
+   "trackImage": "/circuits/kansas.png",
+   "lengthKm": 2.414,
+   "osm": true
+  }
  },
  {
   "categoryId": "nascar",
@@ -1729,7 +1809,11 @@
  {
   "categoryId": "nascar",
   "raceId": "allstar",
-  "info": null
+  "info": {
+   "trackImage": "/circuits/dover.png",
+   "lengthKm": 1.609,
+   "osm": true
+  }
  },
  {
   "categoryId": "nascar",
@@ -1770,12 +1854,23 @@
  {
   "categoryId": "nascar",
   "raceId": "sandiego",
-  "info": null
+  "info": {
+   "trackImage": "/circuits/san-diego.png",
+   "lengthKm": 5.472,
+   "corners": 16,
+   "osm": true
+  }
  },
  {
   "categoryId": "nascar",
   "raceId": "sonoma",
-  "info": null
+  "info": {
+   "trackImage": "/circuits/sonoma.png",
+   "lengthKm": 3.203,
+   "corners": 12,
+   "direction": "clockwise",
+   "osm": true
+  }
  },
  {
   "categoryId": "nascar",
@@ -1798,7 +1893,11 @@
  {
   "categoryId": "nascar",
   "raceId": "northwilkesboro",
-  "info": null
+  "info": {
+   "trackImage": "/circuits/north-wilkesboro.png",
+   "lengthKm": 1.006,
+   "osm": true
+  }
  },
  {
   "categoryId": "nascar",
@@ -1821,7 +1920,11 @@
  {
   "categoryId": "nascar",
   "raceId": "richmond",
-  "info": null
+  "info": {
+   "trackImage": "/circuits/richmond.png",
+   "lengthKm": 1.207,
+   "osm": true
+  }
  },
  {
   "categoryId": "nascar",
@@ -1844,27 +1947,47 @@
  {
   "categoryId": "nascar",
   "raceId": "darlington2",
-  "info": null
+  "info": {
+   "trackImage": "/circuits/darlington.png",
+   "lengthKm": 2.198,
+   "osm": true
+  }
  },
  {
   "categoryId": "nascar",
   "raceId": "gateway-nascar",
-  "info": null
+  "info": {
+   "trackImage": "/circuits/gateway.png",
+   "lengthKm": 2.012,
+   "osm": true
+  }
  },
  {
   "categoryId": "nascar",
   "raceId": "bristol2",
-  "info": null
+  "info": {
+   "trackImage": "/circuits/bristol.png",
+   "lengthKm": 0.858,
+   "osm": true
+  }
  },
  {
   "categoryId": "nascar",
   "raceId": "kansas2",
-  "info": null
+  "info": {
+   "trackImage": "/circuits/kansas.png",
+   "lengthKm": 2.414,
+   "osm": true
+  }
  },
  {
   "categoryId": "nascar",
   "raceId": "vegas2",
-  "info": null
+  "info": {
+   "trackImage": "/circuits/las-vegas-motor-speedway.png",
+   "osm": true,
+   "lengthKm": 2.414
+  }
  },
  {
   "categoryId": "nascar",
@@ -1896,7 +2019,11 @@
  {
   "categoryId": "nascar",
   "raceId": "martinsville2",
-  "info": null
+  "info": {
+   "trackImage": "/circuits/martinsville.png",
+   "lengthKm": 0.847,
+   "osm": true
+  }
  },
  {
   "categoryId": "nascar",
@@ -1941,7 +2068,13 @@
  {
   "categoryId": "dtm",
   "raceId": "norisring",
-  "info": null
+  "info": {
+   "trackImage": "/circuits/norisring.png",
+   "lengthKm": 2.162,
+   "corners": 4,
+   "direction": "counterclockwise",
+   "osm": true
+  }
  },
  {
   "categoryId": "dtm",

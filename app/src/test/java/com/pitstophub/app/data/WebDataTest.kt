@@ -35,9 +35,9 @@ class WebDataTest {
     }
 
     @Test
-    fun `las vegas de rua tem ficha, o oval da NASCAR nao tem desenho verificado`() {
+    fun `las vegas de rua e o oval da NASCAR tem seus proprios desenhos`() {
         assertEquals("/circuits/vegas.png", data.circuit(race("GP de Las Vegas", circuit = "Las Vegas Strip Circuit"))?.trackImage)
-        assertNull(data.circuit(race("Pennzoil 400", circuit = "Las Vegas Motor Speedway", location = "Las Vegas")))
+        assertEquals("/circuits/las-vegas-motor-speedway.png", data.circuit(race("Pennzoil 400", circuit = "Las Vegas Motor Speedway", location = "Las Vegas"))?.trackImage)
     }
 
     @Test

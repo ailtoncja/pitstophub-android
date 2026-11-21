@@ -32,9 +32,9 @@ object RaceChanges {
     // Mesma folga de upcomingRaces do site: uma etapa so "ja passou" um dia e meio depois da largada.
     private val AHEAD_GRACE: Duration = Duration.ofHours(36)
 
-    /** A entrada do catalogo de uma etapa exibida (pelo id; para ids ao vivo, a mesma etapa no fim de semana). */
+    /** A entrada do catalogo de uma etapa exibida (pelo id na mesma temporada; para ids ao vivo, a mesma etapa no fim de semana). */
     fun catalogEntryFor(catalog: List<Race>, race: Race): Race? {
-        catalog.firstOrNull { it.id == race.id }?.let { return it }
+        catalog.firstOrNull { it.id == race.id && it.date.take(4) == race.date.take(4) }?.let { return it }
         if (race.status == RaceStatus.CANCELLED) {
             return catalog.firstOrNull { it.status == RaceStatus.CANCELLED && RaceRoutes.sameEventAndPlace(it, race) }
         }
@@ -62,8 +62,10 @@ object RaceChanges {
      * As canceladas so aparecem aqui: contagem, numero de rodada e "proxima etapa" continuam ignorando-as.
      */
     fun calendarWithCancelled(calendar: List<Race>, catalog: List<Race>, zone: ZoneId = ZoneId.systemDefault()): List<Race> {
+        val years = calendar.map { it.date.take(4) }.toSet()
         val missing = catalog.filter { base ->
             base.status == RaceStatus.CANCELLED &&
+                (years.isEmpty() || base.date.take(4) in years) &&
                 calendar.none { it.id == base.id || (it.status == RaceStatus.CANCELLED && RaceRoutes.sameEventAndPlace(it, base)) }
         }
         return (calendar + missing).sortedBy { RaceTime.startInstant(it, zone) }

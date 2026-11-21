@@ -5,12 +5,15 @@ import com.pitstophub.app.data.model.CategoryStandings
 import com.pitstophub.app.data.model.Race
 import com.pitstophub.app.data.model.RaceStatus
 import com.pitstophub.app.data.model.StandingItem
+import com.pitstophub.app.data.model.StandingsClassGroup
+import com.pitstophub.app.data.remote.ApiBrasilStandings
+import com.pitstophub.app.data.remote.ApiBrasilStandingsClass
 import com.pitstophub.app.data.remote.SyncedRaceRow
 import com.pitstophub.app.data.remote.SyncedStandingRow
 
 /**
- * Categorias sem API propria (F2, F3, F1 Academy, WEC, IMSA, DTM, IndyCar, NASCAR, WRC): o calendario e a
- * classificacao sincronizados (job do GitHub Actions) ficam nas tabelas `synced_*` do Supabase.
+ * Categorias sincronizadas pelo motor do pitstophub-data (F2, F3, F1 Academy, WEC, IMSA, DTM, IndyCar, NASCAR, WRC):
+ * os dados chegam via `api-motorsports` (`/bootstrap`) ou pelas tabelas `synced_*` do Supabase.
  * Porte de `src/synced-races.ts`, inclusive as correcoes de WEC/IMSA.
  */
 object SyncedMerger {
@@ -21,9 +24,13 @@ object SyncedMerger {
 
     fun mergeCalendar(base: Category, rows: List<SyncedRaceRow>): Category {
         if (rows.isEmpty()) return base
-        val synced = rows.map { toRace(it) }
-            .map { race -> normalizeWinner(preferOfficialWinner(base, race), base) }
-        val calendar = dropNonChampionship(base, fillMissingOfficial(base, synced)).map { normalizeWinner(it, base) }
+        return mergeCalendarRaces(base, rows.map(::toRace))
+    }
+
+    fun mergeCalendarRaces(base: Category, races: List<Race>): Category {
+        if (races.isEmpty()) return base
+        val normalized = races.map { race -> normalizeWinner(preferOfficialWinner(base, race), base) }
+        val calendar = dropNonChampionship(base, fillMissingOfficial(base, normalized)).map { normalizeWinner(it, base) }
         val years = calendar.map { it.date.take(4) }.toSet()
         val changedSeason = base.calendar.any { it.date.take(4) !in years }
         return base.copy(calendar = calendar, standings = if (changedSeason) null else base.standings)
@@ -35,6 +42,27 @@ object SyncedMerger {
         if (matching.isEmpty()) return base.copy(standings = null)
         val items = matching.map { StandingItem(it.position, it.name, it.points, it.team) }
         return base.copy(standings = (base.standings ?: CategoryStandings()).copy(drivers = items))
+    }
+
+    fun mergeEngineStandings(base: Category, payload: ApiBrasilStandings): Category {
+        val season = payload.season
+        val calendarYears = base.calendar.mapNotNull { it.date.take(4).toIntOrNull() }.toSet()
+        if (season != null && calendarYears.isNotEmpty() && season !in calendarYears) {
+            return base.copy(standings = null)
+        }
+        val driverGroups = payload.drivers.orEmpty().filter { it.entries.isNotEmpty() }
+        val teamGroups = payload.teams.orEmpty().filter { it.entries.isNotEmpty() }
+        if (driverGroups.isEmpty() && teamGroups.isEmpty()) return base
+
+        fun toItems(group: ApiBrasilStandingsClass): List<StandingItem> =
+            group.entries.map { StandingItem(it.position, it.name, it.points, it.team) }
+
+        val standings = CategoryStandings(
+            drivers = if (driverGroups.size == 1) toItems(driverGroups[0]) else null,
+            driverClasses = if (driverGroups.size > 1) driverGroups.map { StandingsClassGroup(it.classLabel, toItems(it)) } else null,
+            teams = if (teamGroups.size == 1) toItems(teamGroups[0]) else null,
+        )
+        return base.copy(standings = standings)
     }
 
     fun matchingStandings(base: Category, rows: List<SyncedStandingRow>): List<SyncedStandingRow> {

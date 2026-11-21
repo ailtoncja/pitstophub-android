@@ -218,4 +218,29 @@ class RaceChangesTest {
         assertEquals("A e B", RaceChanges.joinNames(listOf("A", "B"), "e"))
         assertEquals("A, B and C", RaceChanges.joinNames(listOf("A", "B", "C"), "and"))
     }
+
+    @Test
+    fun `virada automatica para 2027 nao injeta canceladas nem substituicoes de 2026`() {
+        val f2_2027 = listOf(SiteData.race(id = "r01-melbourne", name = "Melbourne", date = "2027-03-07"))
+        assertEquals(listOf("r01-melbourne"), ids(RaceChanges.calendarWithCancelled(f2_2027, catalog("f2"), utc)))
+
+        val bahrain2027 = F1Merger.buildCalendar(
+            category("f1"),
+            listOf(jolpica("4", "Bahrain Grand Prix", "bahrain", "Bahrain International Circuit", "Sakhir", "Bahrain", "2027-04-11")),
+            emptyMap(),
+            now,
+        ).single()
+        assertNull(bahrain2027.winner)
+        assertNull(RaceChanges.raceChange(catalog("f1"), bahrain2027))
+
+        val f1Merged = F1Merger.merge(
+            category("f1"),
+            listOf(jolpica("4", "Bahrain Grand Prix", "bahrain", "Bahrain International Circuit", "Sakhir", "Bahrain", "2027-04-11")),
+            emptyMap(),
+            emptyList(),
+            emptyList(),
+            now,
+        )
+        assertNull(f1Merged.standings)
+    }
 }

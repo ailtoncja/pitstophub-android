@@ -96,14 +96,25 @@ class RaceDetailViewModel(
                     _state.value = _state.value.copy(rally = info?.let { RallyState.Ready(it) })
                 }
                 loadWeather(race)
-                if (categoryId == "f1" && race.status == RaceStatus.COMPLETED && race.round != null) {
-                    try {
-                        val rows = repository.f1Results(data.season, race.round)
+                if (race.status == RaceStatus.COMPLETED) {
+                    if (categoryId == "f1" && race.round != null) {
+                        try {
+                            val rows = repository.f1Results(data.season, race.round)
+                            _state.value = _state.value.copy(results = if (rows.isEmpty()) ResultsState.NotAvailable else ResultsState.Ready(rows))
+                        } catch (e: CancellationException) {
+                            throw e
+                        } catch (_: Exception) {
+                            _state.value = _state.value.copy(results = ResultsState.Failed)
+                        }
+                    } else if (categoryId != "f1") {
+                        val rows = try {
+                            repository.engineRaceResults(categoryId, race.id)
+                        } catch (e: CancellationException) {
+                            throw e
+                        } catch (_: Exception) {
+                            emptyList()
+                        }
                         _state.value = _state.value.copy(results = if (rows.isEmpty()) ResultsState.NotAvailable else ResultsState.Ready(rows))
-                    } catch (e: CancellationException) {
-                        throw e
-                    } catch (e: Exception) {
-                        _state.value = _state.value.copy(results = ResultsState.Failed)
                     }
                 }
             } catch (e: CancellationException) {
@@ -128,5 +139,5 @@ class RaceDetailViewModel(
     }
 
     private fun initialResults(race: Race): ResultsState =
-        if (categoryId == "f1" && race.status == RaceStatus.COMPLETED && race.round != null) ResultsState.Loading else ResultsState.NotAvailable
+        if (race.status == RaceStatus.COMPLETED && (categoryId != "f1" || race.round != null)) ResultsState.Loading else ResultsState.NotAvailable
 }

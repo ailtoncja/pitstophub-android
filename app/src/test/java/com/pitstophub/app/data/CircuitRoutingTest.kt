@@ -131,9 +131,8 @@ class CircuitRoutingTest {
     @Test
     fun `todo desenho publicado tem o mapa no app`() {
         val file = AppJson.decodeFromString<CircuitsFile>(File(SiteData.assets, WebData.CIRCUITS).readText())
-        // 34 desenhos do site #9 e os 7 tracados do #12 (Charlotte, New Hampshire, Chicagoland, Markham, Washington, Sebring, Atlanta)
-        assertEquals(41, file.drawings.size)
-        for (key in listOf("charlotte-oval", "new-hampshire", "chicagoland", "markham", "washington-dc", "sebring", "atlanta")) {
+        assertEquals(77, file.drawings.size)
+        for (key in listOf("charlotte-oval", "new-hampshire", "chicagoland", "markham", "washington-dc", "sebring", "atlanta", "beijing-street")) {
             assertEquals(key, "/circuits/$key.png", file.drawings[key]?.trackImage)
         }
         for ((key, drawn) in file.drawings) {
@@ -212,8 +211,8 @@ class CircuitRoutingTest {
             Triple("nascar", staticRace("nascar", "iowa"), "iowa"),
             Triple("nascar", staticRace("nascar", "nashville-nascar"), "nashville-superspeedway"),
             Triple("nascar", staticRace("nascar", "homestead"), "homestead"),
-            // NASCAR em COTA usa o National Course (sem desenho verificado): nenhum mapa, nao o da F1.
-            Triple("nascar", staticRace("nascar", "cota-nascar"), null),
+            // NASCAR em COTA usa o National Course de 2,4 milhas, nao o tracado da F1.
+            Triple("nascar", staticRace("nascar", "cota-nascar"), "cota-national"),
             // Tolerancia de extensao de 3% (site #12): Charlotte, New Hampshire, Chicagoland e Atlanta.
             Triple("nascar", staticRace("nascar", "charlotte600"), "charlotte-oval"),
             Triple("nascar", live("Coca-Cola 600", "Charlotte Motor Speedway", "", "2026-05-24"), "charlotte-oval"),
@@ -241,19 +240,19 @@ class CircuitRoutingTest {
             Triple("indy", live("Mid-Ohio", "Mid-Ohio Sports Car Course", "Lexington, Ohio"), "mid-ohio"),
             Triple("indy", staticRace("indy", "nashville"), "nashville-superspeedway"),
             Triple("indy", staticRace("indy", "milwaukee-2"), "milwaukee"),
-            Triple("indy", staticRace("indy", "long-beach-indy"), null),
+            Triple("indy", staticRace("indy", "long-beach-indy"), "long-beach"),
             Triple("indy", staticRace("indy", "markham"), "markham"),
             Triple("indy", live("Ontario Honda Dealers Indy at Markham", "Streets of Markham", "", "2026-08-16"), "markham"),
             Triple("indy", staticRace("indy", "washington"), "washington-dc"),
             Triple("indy", live("Freedom 250 Grand Prix of Washington DC", "Streets of Washington", "", "2026-08-23"), "washington-dc"),
             // IMSA
-            Triple("imsa", staticRace("imsa", "daytona"), null),
+            Triple("imsa", staticRace("imsa", "daytona"), "daytona-road"),
             Triple("imsa", staticRace("imsa", "indianapolis"), "indianapolis-road"),
             Triple("imsa", live("Indianapolis", "Indianapolis Motor Speedway RC"), "indianapolis-road"),
             Triple("imsa", staticRace("imsa", "detroit"), "detroit"),
             Triple("imsa", staticRace("imsa", "roadamerica"), "road-america"),
             Triple("imsa", live("VIR", "VIRginia International Raceway"), "vir"),
-            Triple("imsa", staticRace("imsa", "watkins"), null),
+            Triple("imsa", staticRace("imsa", "watkins"), "watkins-glen"),
             Triple("imsa", staticRace("imsa", "sebring"), "sebring"),
             Triple("imsa", live("74th Annual Mobil 1 Twelve Hours of Sebring", "Sebring International Raceway", "", "2026-03-21"), "sebring"),
             // DTM
@@ -262,7 +261,7 @@ class CircuitRoutingTest {
             Triple("dtm", staticRace("dtm", "nurburgring"), "nurburgring-sprint"),
             Triple("dtm", staticRace("dtm", "sachsenring"), "sachsenring"),
             Triple("dtm", staticRace("dtm", "hockenheimring"), "hockenheim"),
-            Triple("dtm", staticRace("dtm", "norisring"), null),
+            Triple("dtm", staticRace("dtm", "norisring"), "norisring"),
             // WEC
             Triple("wec", staticRace("wec", "lemans"), "le-mans"),
             Triple("wec", staticRace("wec", "fuji"), "fuji"),
@@ -279,10 +278,11 @@ class CircuitRoutingTest {
             Triple("gtwc-asia", live("Okayama International Circuit (SRO GT PowerTour)", "Okayama International Circuit (SRO GT PowerTour)", "Japão"), "okayama"),
             // Brasil
             Triple("endurance-brasil", live("Etapa 8 - Três Horas de Goiânia", "Autódromo Internacional de Goiânia", "Autódromo Internacional de Goiânia"), "goiania"),
-            Triple("endurance-brasil", live("Etapa 5 - Três Horas de Goiânia", "Autódromo Internacional de Santa Cruz do Sul", "Autódromo Internacional de Santa Cruz do Sul"), null),
+            Triple("endurance-brasil", live("Etapa 5 - Três Horas de Santa Cruz do Sul", "Autódromo Internacional de Santa Cruz do Sul", "Autódromo Internacional de Santa Cruz do Sul"), "santa-cruz-do-sul"),
             Triple("nascar-brasil", live("Londrina", "", "Londrina"), "londrina"),
             Triple("porsche-cup", live("Le Mans", "", "Le Mans"), "le-mans"),
             Triple("porsche-cup", live("Algarve (Endurance)", "", "Algarve"), "portimao"),
+            Triple("gtwc-asia", live("Beijing E-Town", "Beijing E-Town Street Circuit", "China"), "beijing-street"),
         )
         for ((categoryId, r, key) in cases) {
             val label = "$categoryId: ${r.name.ifBlank { r.id }}"

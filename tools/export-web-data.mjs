@@ -93,19 +93,38 @@ const venues = VENUES.map((venue, index) => {
   };
 });
 
-const drawings = Object.fromEntries(
-  Object.entries(DRAWN_CIRCUITS).map(([key, drawn]) => [
-    key,
-    {
-      name: drawn.name,
-      layout: drawn.layout,
-      trackImage: drawn.trackImage,
-      ...(drawn.lengthKm != null ? { lengthKm: drawn.lengthKm } : {}),
-      ...(drawn.corners != null ? { corners: drawn.corners } : {}),
-      ...(drawn.direction != null ? { direction: drawn.direction } : {}),
-    },
-  ]),
-);
+// 1b) Mapas adicionais do OpenStreetMap declarados em EXTRA_OSM_CIRCUITS dentro de src/circuit-info.ts.
+const extraOsmText = source.match(/const EXTRA_OSM_CIRCUITS:\s*Record<string,\s*Omit<CircuitInfo,\s*'osm'>>\s*=\s*(\{[\s\S]*?\n\});/)?.[1];
+const EXTRA_OSM_CIRCUITS = extraOsmText ? new Function(`return ${extraOsmText};`)() : {};
+
+const drawings = {
+  ...Object.fromEntries(
+    Object.entries(EXTRA_OSM_CIRCUITS).map(([key, extra]) => [
+      key,
+      {
+        name: key,
+        layout: key,
+        trackImage: extra.trackImage,
+        ...(extra.lengthKm != null ? { lengthKm: extra.lengthKm } : {}),
+        ...(extra.corners != null ? { corners: extra.corners } : {}),
+        ...(extra.direction != null ? { direction: extra.direction } : {}),
+      },
+    ]),
+  ),
+  ...Object.fromEntries(
+    Object.entries(DRAWN_CIRCUITS).map(([key, drawn]) => [
+      key,
+      {
+        name: drawn.name,
+        layout: drawn.layout,
+        trackImage: drawn.trackImage,
+        ...(drawn.lengthKm != null ? { lengthKm: drawn.lengthKm } : {}),
+        ...(drawn.corners != null ? { corners: drawn.corners } : {}),
+        ...(drawn.direction != null ? { direction: drawn.direction } : {}),
+      },
+    ]),
+  ),
+};
 
 // 2) Fichas de GP (RACE_TEST_CIRCUITS): cada `isXRace` vira dados (termos, exclusoes, regex, pais, "a nao ser").
 const order = [...source.matchAll(/\{ match: (is\w+Race), info: (\w+) \}/g)].map((m) => ({ fn: m[1], info: m[2] }));

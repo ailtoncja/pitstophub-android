@@ -135,8 +135,10 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
         }
     }
 
-    /** Volta do segundo plano: se ja passou o intervalo, confere de novo sem a pessoa precisar reabrir o app. */
+    /** Volta do segundo plano: atualiza dados vencidos (>10 min) e confere se ha versao nova do app. */
     fun onForeground() {
+        viewModelScope.launch { load(_selectedId.value, force = false) }
+        loadAll(force = false)
         if (_update.value !is UpdateState.Idle) return
         viewModelScope.launch {
             updater.checkIfDue()?.let { if (_update.value is UpdateState.Idle) _update.value = UpdateState.Available(it) }
