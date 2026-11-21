@@ -12,6 +12,8 @@ import com.pitstophub.app.data.remote.ApiBrasilStandings
 import com.pitstophub.app.data.remote.ApiBrasilStandingsClass
 import com.pitstophub.app.data.remote.ApiEbDriver
 import com.pitstophub.app.data.remote.ApiEbTeam
+import com.pitstophub.app.data.remote.ApiEngineResultRow
+import com.pitstophub.app.data.remote.ApiEngineSession
 import com.pitstophub.app.data.remote.ApiGtwcTeam
 import com.pitstophub.app.data.remote.ApiPerson
 import com.pitstophub.app.data.remote.ApiRace
@@ -238,5 +240,28 @@ class LiveSeriesAndSyncedTest {
         assertNull(SyncedMerger.mergeStandings(next, listOf(old)).standings)
         assertNull(SyncedMerger.mergeStandings(next, listOf(old.copy(season = null))).standings)
         assertNotNull(SyncedMerger.mergeStandings(next, listOf(old.copy(season = 2027))).standings)
+    }
+
+    @Test
+    fun `GTWC nao aplica vencedores de 2026 em corridas de 2027`() {
+        val races2027 = LiveSeriesMapper.gtwcRaces(
+            "europe",
+            listOf(ApiRace("europe", "brands-hatch", 1, "Brands Hatch", "Great Britain", "2027-05-02", winner = null)),
+            Instant.parse("2027-01-01T00:00:00Z"),
+        )
+        assertNull(races2027.single().winner)
+    }
+
+    @Test
+    fun `pickMainSession prefere sessao principal de corrida antes de qualy ou bonus`() {
+        val rows = LiveSeriesMapper.pickMainSession(
+            listOf(
+                ApiEngineSession("qualifying", rows = listOf(ApiEngineResultRow(1, "Qualy Pole"))),
+                ApiEngineSession("bonus", rows = listOf(ApiEngineResultRow(1, "Bonus Driver"))),
+                ApiEngineSession("feature", rows = listOf(ApiEngineResultRow(1, "Main Winner", points = 25.0))),
+            ),
+        )
+        assertEquals("Main Winner", rows.single().driver)
+        assertEquals(25.0, rows.single().points, 0.0)
     }
 }
