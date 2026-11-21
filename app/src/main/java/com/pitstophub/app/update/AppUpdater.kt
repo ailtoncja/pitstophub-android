@@ -33,7 +33,8 @@ sealed interface ManualCheck {
 /**
  * Atualizacao do app pelos GitHub Releases (o APK nao passa pela Play Store):
  *
- * 1. [checkIfDue] consulta `releases/latest` no maximo a cada 6 horas e diz se ha versao maior que [installedVersion];
+ * 1. [checkIfDue] consulta `releases/latest` sempre ao abrir o app (salvo recusa recente) e a cada 10 minutos ao voltar
+ *    do segundo plano, dizendo se ha versao maior que [installedVersion];
  * 2. [download] baixa o APK do Release para [dir] (cache privado), confere o SHA-256 publicado (campo `digest` do GitHub
  *    e/ou as notas do Release) e se o certificado de assinatura e o mesmo do app instalado;
  * 3. a interface entrega o arquivo ao instalador do Android (ver [ApkInstaller]), que pede confirmacao como sempre.
@@ -51,22 +52,26 @@ class AppUpdater(
 ) {
 
     /**
-     * Versao nova a oferecer, ou `null` (esta em dia, a pessoa recusou, ou a rede falhou). A rede so e consultada a cada
-     * 6 horas; no meio tempo vale a versao achada na ultima consulta, enquanto ela nao for recusada (assim a pergunta
-     * volta se o app foi fechado no meio, por exemplo ao liberar "instalar apps desconhecidos").
+     * Versao nova a oferecer, ou `null` (esta em dia, a pessoa recusou, ou a rede falhou). Ao abrir o app
+     * ([onLaunch] = true) consulta na hora, exceto se a pessoa acabou de tocar em "Agora nao"; em segundo plano
+     * respeita o intervalo de 10 minutos.
      */
-    suspend fun checkIfDue(): ReleaseInfo? {
+    suspend fun checkIfDue(onLaunch: Boolean = false): ReleaseInfo? {
         val last = store.getString(KEY_LAST_CHECK)?.toLongOrNull() ?: 0L
+        val dismissedAt = store.getString(KEY_DISMISSED_AT)?.toLongOrNull() ?: 0L
         val current = now()
-        if (current - last !in 0 until UpdateRules.CHECK_INTERVAL_MS) fetchLatest()
+        val withinDismiss = dismissedAt > 0L && (current - dismissedAt in 0 until UpdateRules.CHECK_INTERVAL_MS)
+        val intervalDue = current - last !in 0 until UpdateRules.CHECK_INTERVAL_MS
+        if ((onLaunch && !withinDismiss) || intervalDue) fetchLatest()
         return pending()
     }
 
     /**
-     * Conferida pedida na hora (botao nas configuracoes): ignora o intervalo de 6 horas e um "agora nao"
-     * anterior, porque quem tocou no botao quer a resposta agora.
+     * Conferida pedida na hora (botao nas configuracoes): ignora intervalos e um "agora nao" anterior,
+     * porque quem tocou no botao quer a resposta agora.
      */
     suspend fun checkNow(): ManualCheck {
+        store.putString(KEY_DISMISSED_AT, null)
         if (!fetchLatest()) return ManualCheck.Failed
         return pending()?.let { ManualCheck.Available(it) } ?: ManualCheck.UpToDate
     }
@@ -74,6 +79,7 @@ class AppUpdater(
     /** Consulta o GitHub e guarda o resultado. `false` so quando a rede falhou (o que ja se sabia continua valendo). */
     private suspend fun fetchLatest(): Boolean {
         store.putString(KEY_LAST_CHECK, now().toString())
+        store.putString(KEY_DISMISSED_AT, null)
         return try {
             val result = http.execute("GET", UpdateRules.LATEST_RELEASE_URL, GITHUB_HEADERS)
             // Sem "tag_name" nao e a resposta da API (pagina de erro, portal de wi-fi...): nao da para
@@ -90,9 +96,10 @@ class AppUpdater(
         }
     }
 
-    /** "Agora nao": nao pergunta de novo ate a proxima consulta ao GitHub. */
+    /** "Agora nao": nao pergunta de novo ate passar o intervalo de conferencia. */
     fun dismiss() {
         store.putString(KEY_PENDING, null)
+        store.putString(KEY_DISMISSED_AT, now().toString())
     }
 
     private fun pending(): ReleaseInfo? {
@@ -139,6 +146,7 @@ class AppUpdater(
     companion object {
         private const val KEY_LAST_CHECK = "update_last_check"
         private const val KEY_PENDING = "update_pending"
+        private const val KEY_DISMISSED_AT = "update_dismissed_at"
         private val GITHUB_HEADERS = mapOf(
             "Accept" to "application/vnd.github+json",
             "X-GitHub-Api-Version" to "2022-11-28",

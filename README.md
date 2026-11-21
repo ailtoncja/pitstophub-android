@@ -225,7 +225,7 @@ privacidade, exclusão de conta) foi guardado em `..\pitstophub-playstore-arquiv
   adulterado). Quem baixar pode conferir o hash do arquivo (`Get-FileHash` / `sha256sum`) e o certificado com o mesmo
   `apksigner verify --print-certs` antes de instalar.
 - **Atualizar quem já instalou:** aumente o `versionCode` em `app/build.gradle.kts` a cada APK novo que for compartilhar.
-- **Atualização dentro do app (desde a 1.3.2):** ao abrir, no máximo a cada 6 horas e sem travar a tela, o app consulta
+- **Atualização dentro do app (desde a 1.3.2):** ao abrir o app (salvo recusa recente) e, ao voltar do segundo plano, no máximo a cada 10 minutos, sem travar a tela, o app consulta
   `releases/latest` deste repositório (`update/AppUpdater.kt`). Se a tag `vX.Y.Z` for maior que o `versionName`
   instalado, pergunta "Nova versão X.Y.Z disponível. Atualizar?". O APK só é baixado de
   `github.com/ailtoncja/pitstophub-android/releases/download/...` (e dos servidores de arquivos do GitHub para onde

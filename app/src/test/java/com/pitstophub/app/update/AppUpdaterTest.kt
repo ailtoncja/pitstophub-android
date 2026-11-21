@@ -99,7 +99,7 @@ class AppUpdaterTest {
     }
 
     @Test
-    fun `confere no maximo a cada 6 horas`() = runTest {
+    fun `confere no maximo a cada 10 minutos ao voltar do segundo plano`() = runTest {
         val http = FakeHttp { 200 to releaseJson(digest = "sha256:$apkSha", body = "notas") }
         val store = MemoryStore()
         var clock = 1_000_000_000L
@@ -107,13 +107,35 @@ class AppUpdaterTest {
 
         assertNotNull(updater.checkIfDue())
         clock += UpdateRules.CHECK_INTERVAL_MS - 1
-        // Dentro das 6 horas nao vai a rede, mas a versao achada continua valendo (app fechado no meio da atualizacao).
+        // Dentro do intervalo nao vai a rede, mas a versao achada continua valendo (app fechado no meio da atualizacao).
         assertEquals("1.3.2", updater.checkIfDue()?.version)
         assertEquals(1, http.requests.size)
 
         clock += 1
         assertNotNull(updater.checkIfDue())
         assertEquals(2, http.requests.size)
+    }
+
+    @Test
+    fun `ao abrir o app confere na hora mesmo antes do intervalo, salvo se recusou agora pouco`() = runTest {
+        val http = FakeHttp { 200 to releaseJson(digest = "sha256:$apkSha", body = "notas") }
+        val store = MemoryStore()
+        var clock = 1_000_000_000L
+        val updater = updater(http = http, store = store, now = { clock })
+
+        assertNotNull(updater.checkIfDue(onLaunch = true))
+        clock += 10_000
+        assertNotNull(updater.checkIfDue(onLaunch = true))
+        assertEquals(2, http.requests.size)
+
+        updater.dismiss()
+        clock += 10_000
+        assertNull(updater.checkIfDue(onLaunch = true))
+        assertEquals(2, http.requests.size)
+
+        clock += UpdateRules.CHECK_INTERVAL_MS
+        assertNotNull(updater.checkIfDue(onLaunch = true))
+        assertEquals(3, http.requests.size)
     }
 
     @Test
@@ -136,7 +158,7 @@ class AppUpdaterTest {
     fun `versao pendente some depois de instalada`() = runTest {
         val store = MemoryStore()
         assertNotNull(updater(store = store, installed = "1.3.1").checkIfDue())
-        // Mesmo store, app ja na 1.3.2 e dentro das 6 horas: nada a oferecer.
+        // Mesmo store, app ja na 1.3.2 e dentro do intervalo: nada a oferecer.
         assertNull(updater(store = store, installed = "1.3.2", http = FakeHttp { error("nao deveria consultar") }).checkIfDue())
         assertTrue(store.values.keys.none { it.contains("pending") })
     }
@@ -161,7 +183,7 @@ class AppUpdaterTest {
     // --- conferir na hora (botao "Procurar atualizacao") -------------------------------------------
 
     @Test
-    fun `procurar agora ignora o intervalo de 6 horas e um agora nao anterior`() = runTest {
+    fun `procurar agora ignora o intervalo e um agora nao anterior`() = runTest {
         val http = FakeHttp { 200 to releaseJson(digest = "sha256:$apkSha", body = "notas") }
         val store = MemoryStore()
         val clock = 1_000_000_000L
@@ -169,7 +191,7 @@ class AppUpdaterTest {
 
         assertNotNull(updater.checkIfDue())
         updater.dismiss()
-        // Sem o botao, ficaria calado ate as 6 horas passarem.
+        // Sem o botao, ficaria calado ate o intervalo passar.
         assertNull(updater.checkIfDue())
 
         val found = updater.checkNow()
